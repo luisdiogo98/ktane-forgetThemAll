@@ -1,0 +1,37 @@
+word		||||| ||			word		wire		simon		morse		button		logic		maze
+wire		||||| |||||			alphabet							key		equation
+simon		||||| ||||| |||||		phrase										digit
+morse		||||| |||			talk										math
+button		||||| ||||| ||			text										number
+faulty		||				letter
+logic		|||||
+maze		||||| ||||| |||||		CYAN		YELLOW		GREEN		ORANGE		GREY		LIME		BLUE
+equation	||
+triangle	||
+color/colour	||||| ||||| ||||| |||
+code		||||| |
+digit		||||
+key		||||| |||
+cube		||||| |
+memory		||||
+cipher		||||| |
+melody		|
+harmony		|
+math		||||
+square		||||| |||			faulty		triangle	color		code		memory		melody		light
+number		||||| ||			cursed		cube		colour		cypher				harmony		LED
+chord		|||				cruel		square								chord
+cursed		|				complicated	sphere								piano
+cruel		||||				broken		circle
+sphere		|
+light		||||				RED		PURPLE		MAGENTA		BROWN		----		PINK		WHITE
+alphabet	||				
+LED		||||
+phrase		|
+talk		||||
+text		|||
+piano		|||
+circle		|
+complicated	||
+letter		||
+broken		||	
