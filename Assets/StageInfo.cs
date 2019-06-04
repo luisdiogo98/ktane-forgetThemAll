@@ -27,17 +27,19 @@ public class StageInfo {
 			LED[colors[i]] = true;
 		}
 
-		Debug.LogFormat("[Forget Them All #{0}] Stage {1} LED: {2}", moduleId, stageNo, GetOnLED());
 	}
 
-	String GetOnLED()
+	public String GetOnLED()
 	{
 		String ret = "[";
 		for(int i = 0; i < LED.Count(); i++)
 		{
-			ret += LED[i] ? "1" : "0";
-			if(i != LED.Count() - 1)
-				ret += ", ";
+			if(LED[i])
+			{
+				ret += GetColorName(i);
+				if(i != LED.Count() - 1)
+					ret += " ";
+			}
 		}
 
 		return ret + "]";
@@ -172,10 +174,10 @@ public class StageInfo {
 			LED[8] = !LED[8];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"code\". Toggling Brown LED.", moduleId, stageNo);
 		}
-		else if(moduleName.IndexOf("cypher",  StringComparison.InvariantCultureIgnoreCase) != -1)
+		else if(moduleName.IndexOf("cipher",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[8] = !LED[8];
-			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"cypher\". Toggling Brown LED.", moduleId, stageNo);
+			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"cipher\". Toggling Brown LED.", moduleId, stageNo);
 		}
 
 		if(moduleName.IndexOf("light",  StringComparison.InvariantCultureIgnoreCase) != -1)
@@ -249,5 +251,40 @@ public class StageInfo {
 
 		Debug.LogFormat("[Forget Them All #{0}] Stage {1} Actual LED (after evaluating broken): {2}", moduleId, stageNo, GetOnLED());
 
+	}
+
+	String GetColorName(int color)
+	{
+		switch(color)
+		{
+			case 0:
+				return "Yellow";
+			case 1:
+				return "Grey";
+			case 2:
+				return "Blue";
+			case 3:
+				return "Green";
+			case 4:
+				return "Orange";
+			case 5:
+				return "Red";
+			case 6:
+				return "Lime";
+			case 7:
+				return "Cyan";
+			case 8:
+				return "Brown";
+			case 9:
+				return "White";
+			case 10:
+				return "Purple";
+			case 11:
+				return "Magenta";
+			case 12:
+				return "Pink";
+		}
+
+		return "";
 	}
 }

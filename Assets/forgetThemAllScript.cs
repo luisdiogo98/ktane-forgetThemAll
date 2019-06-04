@@ -33,6 +33,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	int stageCount;
 	int currentStage = 0;
+	int solveCount = 0;
 	List<int> wiresCut = new List<int>();
 	StageInfo[] stages;
 	int keyStage;
@@ -83,8 +84,6 @@ public class forgetThemAllScript : MonoBehaviour
 
 	void Start () 
 	{
-		Debug.LogFormat("[Forget Them All #{0}] LED reference for logging purposes: [yellow, grey, blue, green, orange, red, lime, cyan, brown, white, purple, magenta, pink]", moduleId);
-
 		startTime = (int) (bomb.GetTime() / 60);
 
 		RandomizeColors();
@@ -102,6 +101,12 @@ public class forgetThemAllScript : MonoBehaviour
 			ticker = 0;
 
 			List<String> newSolves = bomb.GetSolvedModuleNames().ToList();
+
+			if(newSolves.Count() == solveCount)
+				return;
+
+			solveCount = newSolves.Count();
+
 			foreach (String d in ignoredModules) { newSolves.Remove(d); }
 			foreach (String d in solvedModules) { newSolves.Remove(d); }
 
@@ -132,12 +137,14 @@ public class forgetThemAllScript : MonoBehaviour
 
 		if(!readyToSolve)
 		{
-			GetComponent<KMBombModule>().HandleStrike();
 			Debug.LogFormat("[Forget Them All #{0}] Strike! {1} wire cut before module is ready to be solved.", moduleId, GetColorName(colors[wire]));
+			GetComponent<KMBombModule>().HandleStrike();
+			return;
 		}
 
 		int index = cutOrder.FindIndex(x => x == colors[wire]);
-		cutOrder.RemoveAt(index);
+		if(index != -1)
+			cutOrder.RemoveAt(index);
 
 		LEDs[wire].transform.Find("light").GetComponentInChildren<Renderer>().material = lightColors[13];
 
@@ -157,7 +164,7 @@ public class forgetThemAllScript : MonoBehaviour
 		}
 		else
 		{
-			Debug.LogFormat("[Forget Them All #{0}] Strike! {1} wire cut. Expecting {2} wire. Remaining wires order: {3}.", moduleId, GetColorName(colors[wire]), GetColorName(colors[cutOrder[0]]), ListToString(cutOrder));
+			Debug.LogFormat("[Forget Them All #{0}] Strike! {1} wire cut. Expecting {2} wire. Remaining wires order: {3}.", moduleId, GetColorName(colors[wire]), GetColorName(cutOrder[0]), ListToString(cutOrder));
 			GetComponent<KMBombModule>().HandleStrike();
 		}
 	}
@@ -242,8 +249,8 @@ public class forgetThemAllScript : MonoBehaviour
 
 			if(wiresCut.Count() == 13)
 			{
-				GetComponent<KMBombModule>().HandlePass();
 				Debug.LogFormat("[Forget Them All #{0}] All wires cut before module is ready to be solved. Autosolving. (Like, seriously?? 13 strikes and you're still alive? Jeez...)", moduleId);
+				GetComponent<KMBombModule>().HandlePass();
 			}
 
 			CalcFinalSolution();
@@ -257,6 +264,9 @@ public class forgetThemAllScript : MonoBehaviour
 		}
 
 		StageInfo s = stages[currentStage - 1];
+
+		Debug.LogFormat("[Forget Them All #{0}] --------------------------- Stage {1} ---------------------------", moduleId, currentStage);
+		Debug.LogFormat("[Forget Them All #{0}] Stage {1} LED: {2}", moduleId, currentStage, s.GetOnLED());
 
 		for(int i = 0; i < s.LED.Count(); i++)
 		{
@@ -289,12 +299,17 @@ public class forgetThemAllScript : MonoBehaviour
 
 	void CalcFinalSolution()
 	{
+		Debug.LogFormat("[Forget Them All #{0}] --------------------------- Solving ---------------------------", moduleId, currentStage);
+
 		int[] totalLED = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 		foreach(StageInfo si in stages)
 		{
 			totalLED = totalLED.Select((x, index) => x + (si.LED[index] ? 1 : 0)).ToArray();
 		}
+
+		Debug.LogFormat("[Forget Them All #{0}] ", moduleId, currentStage);
+
 
 		int aaBattery = bomb.GetBatteryCount(Battery.AA);
 		int portPlates = bomb.GetPortPlateCount();
@@ -308,19 +323,35 @@ public class forgetThemAllScript : MonoBehaviour
 		int offInd = bomb.GetOffIndicators().Count();
 		int dBattery = bomb.GetBatteryCount(Battery.D);
 
-		int value = totalLED[0] * aaBattery + 
-					totalLED[1] * portPlates + 
-					totalLED[2] * startTime + 
-					totalLED[3] * dupPorts + 
-					totalLED[4] * moduleCount + 
-					totalLED[5] * strikeCount + 
-					totalLED[6] * snTotal +
-					totalLED[7] * snLetters + 
-					totalLED[8] * portTypes + 
-					totalLED[9] * onInd + 
-					totalLED[10] * totalLED[10] +
-					totalLED[11] * offInd +
-					totalLED[12] * dBattery;
+		int yellow = totalLED[0] * aaBattery;
+		int grey = totalLED[1] * portPlates;
+		int blue = totalLED[2] * startTime;
+		int green = totalLED[3] * dupPorts;
+		int orange = totalLED[4] * moduleCount;
+		int red = totalLED[5] * strikeCount;
+		int lime = totalLED[6] * snTotal;
+		int cyan = totalLED[7] * snLetters; 
+		int brown =	totalLED[8] * portTypes; 
+		int white = totalLED[9] * onInd; 
+		int purple = totalLED[10] * totalLED[10];
+		int magenta = totalLED[11] * offInd;
+		int pink = totalLED[12] * dBattery;
+
+		Debug.LogFormat("[Forget Them All #{0}] Yellow ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[0], aaBattery, yellow);
+		Debug.LogFormat("[Forget Them All #{0}] Grey ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[1], portPlates, grey);
+		Debug.LogFormat("[Forget Them All #{0}] Blue ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[2], startTime, blue);
+		Debug.LogFormat("[Forget Them All #{0}] Green ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[3], dupPorts, green);
+		Debug.LogFormat("[Forget Them All #{0}] Orange ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[4], moduleCount, orange);
+		Debug.LogFormat("[Forget Them All #{0}] Red ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[5], strikeCount, red);
+		Debug.LogFormat("[Forget Them All #{0}] Lime ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[6], snTotal, lime);
+		Debug.LogFormat("[Forget Them All #{0}] Cyan ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[7], snLetters, cyan);
+		Debug.LogFormat("[Forget Them All #{0}] Brown ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[8], portTypes, brown);
+		Debug.LogFormat("[Forget Them All #{0}] White ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[9], onInd, white);
+		Debug.LogFormat("[Forget Them All #{0}] Purple ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[10], totalLED[10], purple);
+		Debug.LogFormat("[Forget Them All #{0}] Magenta ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[11], offInd, magenta);
+		Debug.LogFormat("[Forget Them All #{0}] Pink ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[12], dBattery, pink);
+
+		int value = yellow + grey + blue + green + orange + red + lime + cyan + brown + white + purple + magenta + pink;
 
 		keyStage = value % stageCount;
 		if(keyStage == 0)
@@ -418,7 +449,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 		for(int i = 0; i < l.Count(); i++)
 		{
-			res += l[i];
+			res += GetColorName(l[i]);
 			if(i != l.Count() - 1)
 				res += " ";
 		}
