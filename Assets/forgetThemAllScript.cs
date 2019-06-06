@@ -53,6 +53,7 @@ public class forgetThemAllScript : MonoBehaviour
 				"Forget Them All",
 				"Alchemy",
 				"Forget Everything",
+				"Forget Infinity",
 				"Forget Me Not",
 				"Forget This",
 				"Purgatory",
