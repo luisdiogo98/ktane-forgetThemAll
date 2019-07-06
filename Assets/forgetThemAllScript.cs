@@ -457,8 +457,8 @@ public class forgetThemAllScript : MonoBehaviour
 
 		return res + "]";
 	}
-	public string TwitchHelpMessage = "Use '!{0} cut x y z' to cut wires! For ex. '!{0} cut 1 2 3 4 5 6' will cut wires 1, 2, 3, 4, 5 and 6 in that order.";
-    	IEnumerator ProcessTwitchCommand(string command)
+	public string TwitchHelpMessage = "Use '!{0} cycle' to cycle between homes. To submit a home use '!{0} <Home name>'. For ex. '!{0} Homestead'. Pay attention to the capitals in the name!";
+    IEnumerator ProcessTwitchCommand(string command)
 	{
 		string commfinal=command.Replace("cut ", "");
 		string[] digitstring = commfinal.Split(' ');
@@ -469,11 +469,25 @@ public class forgetThemAllScript : MonoBehaviour
 				if(index<=13){
 					tried=int.Parse(digit);
 					index+=1;
+					if(tried<14){
+						if(tried>0){
 					yield return wireInt[tried-1];
+						}
+						else{
+							yield return null;
+							yield return "sendtochaterror Number too small!";
+							yield break;
+						}
+					}
+					else{
+						yield return null;
+						yield return "sendtochaterror Number too big!";
+						yield break;
+					}
 				}
 				else{
 					yield return null;
-					yield return "sendtochaterror Too many digits!.";
+					yield return "sendtochaterror Too many digits!";
 					yield break;
 				}
 			}
