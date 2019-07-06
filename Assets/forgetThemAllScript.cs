@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -456,5 +456,32 @@ public class forgetThemAllScript : MonoBehaviour
 		}
 
 		return res + "]";
+	}
+	public string TwitchHelpMessage = "Use '!{0} cycle' to cycle between homes. To submit a home use '!{0} <Home name>'. For ex. '!{0} Homestead'. Pay attention to the capitals in the name!";
+    IEnumerator ProcessTwitchCommand(string command)
+	{
+		string commfinal=command.Replace("cut ", "");
+		string[] digitstring = commfinal.Split(' ');
+		int tried;
+		int index =1;
+		foreach(string digit in digitstring){
+			if(int.TryParse(digit, out tried)){
+				if(index<=13){
+					tried=int.Parse(digit);
+					index+=1;
+					yield return wireInt[tried-1];
+				}
+				else{
+					yield return null;
+					yield return "sendtochaterror Too many digits!.";
+					yield break;
+				}
+			}
+			else{
+				yield return null;
+				yield return "sendtochaterror Digit not valid.";
+				yield break;
+			}
+		}
 	}
 }
