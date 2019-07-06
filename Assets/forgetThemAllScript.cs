@@ -457,8 +457,8 @@ public class forgetThemAllScript : MonoBehaviour
 
 		return res + "]";
 	}
-	public string TwitchHelpMessage = "Use '!{0} cycle' to cycle between homes. To submit a home use '!{0} <Home name>'. For ex. '!{0} Homestead'. Pay attention to the capitals in the name!";
-    IEnumerator ProcessTwitchCommand(string command)
+	public string TwitchHelpMessage = "Use '!{0} cut x y z' to cut wires! For ex. '!{0} cut 1 2 3 4 5 6' will cut wires 1, 2, 3, 4, 5 and 6 in that order.";
+    	IEnumerator ProcessTwitchCommand(string command)
 	{
 		string commfinal=command.Replace("cut ", "");
 		string[] digitstring = commfinal.Split(' ');
