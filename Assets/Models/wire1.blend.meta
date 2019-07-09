@@ -28,6 +28,7 @@ ModelImporter:
     2300008: Cylinder_MeshPart4
     2300010: Cylinder_MeshPart5
     2300012: Cylinder_MeshPart6
+    2300014: //RootNode
     3300000: Cylinder_MeshPart0
     3300002: Cylinder_MeshPart1
     3300004: Cylinder_MeshPart2
@@ -35,6 +36,7 @@ ModelImporter:
     3300008: Cylinder_MeshPart4
     3300010: Cylinder_MeshPart5
     3300012: Cylinder_MeshPart6
+    3300014: //RootNode
     4300000: Cylinder_MeshPart0
     4300002: Cylinder_MeshPart1
     4300004: Cylinder_MeshPart2
@@ -42,6 +44,7 @@ ModelImporter:
     4300008: Cylinder_MeshPart4
     4300010: Cylinder_MeshPart5
     4300012: Cylinder_MeshPart6
+    4300014: Cylinder
     7400000: Default Take
     9500000: //RootNode
   materials:
