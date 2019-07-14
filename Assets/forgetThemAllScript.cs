@@ -33,6 +33,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	int stageCount;
 	int currentStage = 0;
+	int lastCalcStage = 0;
 	int solveCount = 0;
 	List<int> wiresCut = new List<int>();
 	StageInfo[] stages;
@@ -40,6 +41,7 @@ public class forgetThemAllScript : MonoBehaviour
 	List<int> cutOrder = new List<int>();
 
 	int ticker = 0;
+	int delayer = 0;
 	List<String> solvedModules = new List<String>();
 
 	int startTime;
@@ -94,12 +96,13 @@ public class forgetThemAllScript : MonoBehaviour
 		RandomizeColors();
 		if(CheckAutoSolve()) return;
 		CreateStages();
-		DisplayNextStage();
 	}
 	
 	void Update () 
 	{
 		ticker++;
+		if(delayer > 0)
+			delayer--;
 
 		if(ticker == 5)
 		{
@@ -118,8 +121,13 @@ public class forgetThemAllScript : MonoBehaviour
 			if(newSolves.Count() == 0)
 				return;
 			
-			stages[currentStage - 1].SetModuleName(newSolves[0]);
+			lastCalcStage++;
+			stages[lastCalcStage - 1].SetModuleName(newSolves[0]);
 			solvedModules.Add(newSolves[0]);
+		}
+
+		if(delayer <= 0 && lastCalcStage >= currentStage)
+		{
 			DisplayNextStage();
 		}
 	}
@@ -246,6 +254,7 @@ public class forgetThemAllScript : MonoBehaviour
 	void DisplayNextStage()
 	{
 		currentStage++;
+		delayer = 300;
 		if(currentStage > stageCount)
 		{
 			readyToSolve = true;
