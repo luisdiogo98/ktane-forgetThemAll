@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using KModkit;
+using rnd = UnityEngine.Random;
 
 public class StageInfo {
 
@@ -13,15 +14,15 @@ public class StageInfo {
 	public bool[] LED = new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false};
 	public String moduleName;
 
-	public StageInfo(int stageNo, int moduleId, System.Random rnd)
+	public StageInfo(int stageNo, int moduleId)
 	{
 		this.stageNo = stageNo;
 		this.moduleId = moduleId;
 		
-		int LEDn = rnd.Next() % 3 + 1;
+		int LEDn = rnd.Range(1, 4);
 
 		int[] colors = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-		colors = colors.OrderBy(x => rnd.Next()).ToArray();
+		colors = colors.OrderBy(x => rnd.Range(1, 1000)).ToArray();
 		for(int i = 0; i < LEDn; i++)
 		{
 			LED[colors[i]] = true;

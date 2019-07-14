@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using KModkit;
+using rnd = UnityEngine.Random;
 
 public class forgetThemAllScript : MonoBehaviour 
 {
 	public KMBombInfo bomb;
 	public KMAudio Audio;
 
-	static System.Random rnd = new System.Random();
 	static String[] ignoredModules;
 
 	public TextMesh stageNo;
@@ -207,7 +207,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	void RandomizeColors()
 	{
-		colors = colors.OrderBy(x => rnd.Next()).ToArray();
+		colors = colors.OrderBy(x => rnd.Range(0, 1000)).ToArray();
 
 		for(int i = 0; i < wires.Count(); i++)
 		{
@@ -235,7 +235,7 @@ public class forgetThemAllScript : MonoBehaviour
 		stages = new StageInfo[stageCount];
 		for(int i = 0; i < stages.Count(); i++)
 		{
-			stages[i] = new StageInfo(i+1, moduleId, rnd);
+			stages[i] = new StageInfo(i+1, moduleId);
 		}
 	}
 

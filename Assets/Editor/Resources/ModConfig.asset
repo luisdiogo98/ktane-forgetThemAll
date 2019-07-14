@@ -19,6 +19,6 @@ MonoBehaviour:
     https://ktane.timwi.de/HTML/Forget%20Them%20All.html\r\nManual PDF: https://ktane.timwi.de/PDF/Forget%20Them%20All.pdf\r\n\r\nAny
     problems/suggestions, feel free to contact me on the KTaNE Discord @TheThirdMan.
     Join the KTaNE Discord here: https://discord.gg/Fv7YEDj"
-  version: 1.5
+  version: 1.6
   outputFolder: build
   previewImage: {fileID: 2800000, guid: a4f5d8d305efed14f933256e3660ff33, type: 3}
