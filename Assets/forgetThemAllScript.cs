@@ -47,6 +47,7 @@ public class forgetThemAllScript : MonoBehaviour
 	void Awake()
 	{
 		moduleId = moduleIdCounter++;
+        GetComponent<KMBombModule>().OnActivate += Activate;
 
 		if (ignoredModules == null)
             ignoredModules = GetComponent<KMBossModule>().GetIgnoredModules("Forget Them All", new string[]{
@@ -83,10 +84,13 @@ public class forgetThemAllScript : MonoBehaviour
 		wireInt[12].OnInteract += delegate () { CutWire(12); return false; };
 	}
 
-	void Start () 
+	void Activate()
 	{
 		startTime = (int) (bomb.GetTime() / 60);
+	}
 
+	void Start () 
+	{
 		RandomizeColors();
 		if(CheckAutoSolve()) return;
 		CreateStages();
