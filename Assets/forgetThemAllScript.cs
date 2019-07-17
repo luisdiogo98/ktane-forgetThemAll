@@ -257,6 +257,9 @@ public class forgetThemAllScript : MonoBehaviour
 		delayer = 300;
 		if(currentStage > stageCount)
 		{
+			if(readyToSolve)
+				return;
+				
 			readyToSolve = true;
 			
 			ShowFinalStage();
