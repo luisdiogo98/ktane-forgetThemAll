@@ -5,8 +5,9 @@ using System.Linq;
 using UnityEngine;
 using KModkit;
 using rnd = UnityEngine.Random;
+using System.Text.RegularExpressions;
 
-public class forgetThemAllScript : MonoBehaviour 
+public class forgetThemAllScript : MonoBehaviour
 {
 	public KMBombInfo bomb;
 	public KMAudio Audio;
@@ -91,15 +92,18 @@ public class forgetThemAllScript : MonoBehaviour
 		startTime = (int) (bomb.GetTime() / 60);
 	}
 
-	void Start () 
+	void Start ()
 	{
 		RandomizeColors();
 		if(CheckAutoSolve()) return;
 		CreateStages();
 	}
-	
-	void Update () 
+
+	void Update ()
 	{
+        if (moduleSolved)
+            return;
+
 		ticker++;
 		if(delayer > 0)
 			delayer--;
@@ -120,7 +124,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 			if(newSolves.Count() == 0)
 				return;
-			
+
 			lastCalcStage++;
 			stages[lastCalcStage - 1].SetModuleName(newSolves[0]);
 			solvedModules.Add(newSolves[0]);
@@ -259,15 +263,16 @@ public class forgetThemAllScript : MonoBehaviour
 		{
 			if(readyToSolve)
 				return;
-				
+
 			readyToSolve = true;
-			
+
 			ShowFinalStage();
 
 			if(wiresCut.Count() == 13)
 			{
 				Debug.LogFormat("[Forget Them All #{0}] All wires cut before module is ready to be solved. Autosolving. (Like, seriously?? 13 strikes and you're still alive? Jeez...)", moduleId);
-				GetComponent<KMBombModule>().HandlePass();
+                moduleSolved = true;
+                GetComponent<KMBombModule>().HandlePass();
 			}
 
 			CalcFinalSolution();
@@ -347,9 +352,9 @@ public class forgetThemAllScript : MonoBehaviour
 		int orange = totalLED[4] * moduleCount;
 		int red = totalLED[5] * strikeCount;
 		int lime = totalLED[6] * snTotal;
-		int cyan = totalLED[7] * snLetters; 
-		int brown =	totalLED[8] * portTypes; 
-		int white = totalLED[9] * onInd; 
+		int cyan = totalLED[7] * snLetters;
+		int brown =	totalLED[8] * portTypes;
+		int white = totalLED[9] * onInd;
 		int purple = totalLED[10] * totalLED[10];
 		int magenta = totalLED[11] * offInd;
 		int pink = totalLED[12] * dBattery;
@@ -473,47 +478,31 @@ public class forgetThemAllScript : MonoBehaviour
 
 		return res + "]";
 	}
-	public string TwitchHelpMessage = "Use '!{0} cut x y z' to cut wires! For ex. '!{0} cut 1 2 3 4 5 6' will cut wires 1, 2, 3, 4, 5 and 6 in that order.";
+	private string TwitchHelpMessage = "!{0} cut 1 2 3 [wires are numbered 1–13 from left to right]";
     IEnumerator ProcessTwitchCommand(string command)
-	{
-		string commfinal=command.Replace("cut ", "");
-		string[] digitstring = commfinal.Split(' ');
-		int tried;
-		int index =1;
-		foreach(string digit in digitstring){
-			if(int.TryParse(digit, out tried)){
-				if(index<=13){
-					tried=int.Parse(digit);
-					index+=1;
-					if(tried<14){
-						if(tried>0){
-					yield return null;
-					yield return wireInt[tried-1];
-					yield return wireInt[tried-1];
-						}
-						else{
-							yield return null;
-							yield return "sendtochaterror Number too small!";
-							yield break;
-						}
-					}
-					else{
-						yield return null;
-						yield return "sendtochaterror Number too big!";
-						yield break;
-					}
-				}
-				else{
-					yield return null;
-					yield return "sendtochaterror Too many digits!";
-					yield break;
-				}
-			}
-			else{
-				yield return null;
-				yield return "sendtochaterror Digit not valid.";
-				yield break;
-			}
-		}
-	}
+    {
+        var m = Regex.Match(command, @"^\s*(?:cut\s+)?([\d ]+)\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (!m.Success)
+            yield break;
+
+        int value;
+        var wiresToCut = new List<KMSelectable>();
+        foreach (var number in m.Groups[1].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (!int.TryParse(number, out value) || value < 1 || value > 13)
+            {
+                yield return string.Format("sendtochaterror Number too {0}! Wires are numbered 1–13.", value < 1 ? "small" : "large");
+                yield break;
+            }
+            if (wiresToCut.Contains(wireInt[value - 1]))
+            {
+                yield return string.Format("sendtochaterror You’re trying to cut wire {0} twice.", value);
+                yield break;
+            }
+            wiresToCut.Add(wireInt[value - 1]);
+        }
+
+        yield return null;
+        yield return wiresToCut;
+    }
 }
