@@ -487,6 +487,8 @@ public class forgetThemAllScript : MonoBehaviour
 					index+=1;
 					if(tried<14){
 						if(tried>0){
+					yield return null;
+					yield return wireInt[tried-1];
 					yield return wireInt[tried-1];
 						}
 						else{
