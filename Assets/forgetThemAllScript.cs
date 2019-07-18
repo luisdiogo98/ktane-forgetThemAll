@@ -488,29 +488,24 @@ public class forgetThemAllScript : MonoBehaviour
 					if(tried<14){
 						if(tried>0){
 					yield return null;
-					yield return wireInt[tried-1];
-					yield return wireInt[tried-1];
+					yield return new[] { wireInt[tried-1] };
 						}
 						else{
-							yield return null;
 							yield return "sendtochaterror Number too small!";
 							yield break;
 						}
 					}
 					else{
-						yield return null;
 						yield return "sendtochaterror Number too big!";
 						yield break;
 					}
 				}
 				else{
-					yield return null;
 					yield return "sendtochaterror Too many digits!";
 					yield break;
 				}
 			}
 			else{
-				yield return null;
 				yield return "sendtochaterror Digit not valid.";
 				yield break;
 			}
