@@ -12,7 +12,7 @@ public class forgetThemAllScript : MonoBehaviour
 	public KMBombInfo bomb;
 	public KMAudio Audio;
 
-	static String[] ignoredModules;
+	static string[] ignoredModules;
 
 	public TextMesh stageNo;
 
@@ -34,17 +34,16 @@ public class forgetThemAllScript : MonoBehaviour
 
 	int stageCount;
 	int currentStage = 0;
-	int lastCalcStage = 0;
-	int solveCount = 0;
+	int lastCalcStage = -1;
 	List<int> wiresCut = new List<int>();
 	StageInfo[] stages;
 	int keyStage;
 	List<int> cutOrder = new List<int>();
 
-	int ticker = 0;
-	int delayer = 0;
-	List<String> solvedModules = new List<String>();
 
+	int delayer = 0;
+	List<string> solvedModuleNames = new List<string>();
+	List<string> queuedSolvedNames = new List<string>();
 	int startTime;
 
 	void Awake()
@@ -72,66 +71,82 @@ public class forgetThemAllScript : MonoBehaviour
 				"Turn the Key"
             });
 
-		wireInt[0].OnInteract += delegate () { CutWire(0); return false; };
-		wireInt[1].OnInteract += delegate () { CutWire(1); return false; };
-		wireInt[2].OnInteract += delegate () { CutWire(2); return false; };
-		wireInt[3].OnInteract += delegate () { CutWire(3); return false; };
-		wireInt[4].OnInteract += delegate () { CutWire(4); return false; };
-		wireInt[5].OnInteract += delegate () { CutWire(5); return false; };
-		wireInt[6].OnInteract += delegate () { CutWire(6); return false; };
-		wireInt[7].OnInteract += delegate () { CutWire(7); return false; };
-		wireInt[8].OnInteract += delegate () { CutWire(8); return false; };
-		wireInt[9].OnInteract += delegate () { CutWire(9); return false; };
-		wireInt[10].OnInteract += delegate () { CutWire(10); return false; };
-		wireInt[11].OnInteract += delegate () { CutWire(11); return false; };
-		wireInt[12].OnInteract += delegate () { CutWire(12); return false; };
+		for (int x = 0; x < wireInt.Length; x++)
+		{
+			int y = x;
+			wireInt[x].OnInteract += delegate () { CutWire(y); return false; };
+		}
+		// Inefficient coding, more efficient coding is provided above.
+		/*		wireInt[0].OnInteract += delegate () { CutWire(0); return false; };
+				wireInt[1].OnInteract += delegate () { CutWire(1); return false; };
+				wireInt[2].OnInteract += delegate () { CutWire(2); return false; };
+				wireInt[3].OnInteract += delegate () { CutWire(3); return false; };
+				wireInt[4].OnInteract += delegate () { CutWire(4); return false; };
+				wireInt[5].OnInteract += delegate () { CutWire(5); return false; };
+				wireInt[6].OnInteract += delegate () { CutWire(6); return false; };
+				wireInt[7].OnInteract += delegate () { CutWire(7); return false; };
+				wireInt[8].OnInteract += delegate () { CutWire(8); return false; };
+				wireInt[9].OnInteract += delegate () { CutWire(9); return false; };
+				wireInt[10].OnInteract += delegate () { CutWire(10); return false; };
+				wireInt[11].OnInteract += delegate () { CutWire(11); return false; };
+				wireInt[12].OnInteract += delegate () { CutWire(12); return false; };*/
+		stageNo.text = "---";
 	}
-
+	bool canStart = false;
 	void Activate()
 	{
 		startTime = (int) (bomb.GetTime() / 60);
+		if (CheckAutoSolve())
+		{
+			Debug.LogFormat("[Forget Them All #{0}] There are 0 modules not ignored on this bomb. Autosolving...", moduleId);
+			StartCoroutine(HandleSolving());
+			return;
+		}
+		CreateStages();
+		canStart = true;
 	}
-
+	IEnumerator HandleSolving()
+	{
+		moduleSolved = true;
+		GetComponent<KMBombModule>().HandlePass();
+		while (stageNo.text.Length > 0)
+		{
+			string curText = stageNo.text;
+			stageNo.text = curText.Substring(0, curText.Length - 1);
+			yield return new WaitForSeconds(0.1f);
+		}
+		stageNo.text = "";
+		yield return null;
+	}
 	void Start ()
 	{
 		RandomizeColors();
-		if(CheckAutoSolve()) return;
-		CreateStages();
 	}
 
 	void Update ()
 	{
-        if (moduleSolved)
+        if (moduleSolved || !canStart)
             return;
 
-		ticker++;
 		if(delayer > 0)
 			delayer--;
 
-		if(ticker == 5)
+		List<string> curSolvedModules = bomb.GetSolvedModuleNames().Where(a => !ignoredModules.Contains(a)).ToList();
+
+		foreach (string solvedModName in solvedModuleNames.Union(queuedSolvedNames))
+			curSolvedModules.Remove(solvedModName);
+		if (curSolvedModules.Count > 0)
+			queuedSolvedNames.AddRange(curSolvedModules);
+
+		if (delayer <= 0 && (lastCalcStage == -1 || queuedSolvedNames.Count > 0) && lastCalcStage < currentStage && !readyToSolve)
 		{
-			ticker = 0;
-
-			List<String> newSolves = bomb.GetSolvedModuleNames().ToList();
-
-			if(newSolves.Count() == solveCount)
-				return;
-
-			solveCount = newSolves.Count();
-
-			foreach (String d in ignoredModules) { newSolves.Remove(d); }
-			foreach (String d in solvedModules) { newSolves.Remove(d); }
-
-			if(newSolves.Count() == 0)
-				return;
-
 			lastCalcStage++;
-			stages[lastCalcStage - 1].SetModuleName(newSolves[0]);
-			solvedModules.Add(newSolves[0]);
-		}
-
-		if(delayer <= 0 && lastCalcStage >= currentStage)
-		{
+			if (lastCalcStage - 1 >= 0 && lastCalcStage - 1 < stages.Length)
+			{
+				stages[lastCalcStage - 1].SetModuleName(queuedSolvedNames[0]);
+				solvedModuleNames.Add(queuedSolvedNames[0]);
+				queuedSolvedNames.RemoveAt(0);
+			}
 			DisplayNextStage();
 		}
 	}
@@ -149,40 +164,41 @@ public class forgetThemAllScript : MonoBehaviour
 
 		wiresCut.Add(wire);
 
-		if(moduleSolved)
-			return;
-
-		if(!readyToSolve)
+		if(!readyToSolve && !moduleSolved)
 		{
-			Debug.LogFormat("[Forget Them All #{0}] Strike! {1} wire cut before module is ready to be solved.", moduleId, GetColorName(colors[wire]));
+			Debug.LogFormat("[Forget Them All #{0}] Strike! [{1}] wire cut before module is ready to be solved.", moduleId, GetColorName(colors[wire]));
 			GetComponent<KMBombModule>().HandleStrike();
 			return;
 		}
-
+		LEDs[wire].transform.Find("light").GetComponentInChildren<Renderer>().material = lightColors[13];
+		if (moduleSolved)
+			return;
 		int index = cutOrder.FindIndex(x => x == colors[wire]);
 		if(index != -1)
 			cutOrder.RemoveAt(index);
 
-		LEDs[wire].transform.Find("light").GetComponentInChildren<Renderer>().material = lightColors[13];
-
-		if(index == 0)
+		if (index == 0)
 		{
-			if(cutOrder.Count() == 0)
+			Debug.LogFormat("[Forget Them All #{0}] Successfully cut {1} wire.", moduleId, GetColorName(colors[wire]));
+			if (cutOrder.Count() == 0)
 			{
-				moduleSolved = true;
-				stageNo.text = "";
-				Debug.LogFormat("[Forget Them All #{0}] Successfully cut {1} wire. Module solved.", moduleId, GetColorName(colors[wire]));
-				GetComponent<KMBombModule>().HandlePass();
+				Debug.LogFormat("[Forget Them All #{0}] All necessary wires have been cut in order successfully. Module disarmed.", moduleId, GetColorName(colors[wire]));
+				StartCoroutine(HandleSolving());
 			}
 			else
 			{
-				Debug.LogFormat("[Forget Them All #{0}] Successfully cut {1} wire. Remaining wires order: {2}.", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
+				Debug.LogFormat("[Forget Them All #{0}] The remaining wires to cut in order are: {2}.", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
 			}
 		}
-		else
+		else if (cutOrder.Any())
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Strike! {1} wire cut. Expecting {2} wire. Remaining wires order: {3}.", moduleId, GetColorName(colors[wire]), GetColorName(cutOrder[0]), ListToString(cutOrder));
 			GetComponent<KMBombModule>().HandleStrike();
+		}
+		else if (!moduleSolved)
+		{
+			Debug.LogFormat("[Forget Them All #{0}] There are no wires to cut in order, module disarmed.", moduleId);
+			StartCoroutine(HandleSolving());
 		}
 	}
 
@@ -216,9 +232,9 @@ public class forgetThemAllScript : MonoBehaviour
 				return "Magenta";
 			case 12:
 				return "Pink";
+			default:
+				return "";
 		}
-
-		return "";
 	}
 
 	void RandomizeColors()
@@ -235,15 +251,7 @@ public class forgetThemAllScript : MonoBehaviour
 	bool CheckAutoSolve()
 	{
 		stageCount = bomb.GetSolvableModuleNames().Where(x => !ignoredModules.Contains(x)).Count();
-		if(stageCount == 0)
-		{
-			moduleSolved = true;
-			GetComponent<KMBombModule>().HandlePass();
-			Debug.LogFormat("[Forget Them All #{0}] No not ignored modules on this bomb. Autosolving.", moduleId);
-			return true;
-		}
-
-		return false;
+		return stageCount == 0;
 	}
 
 	void CreateStages()
@@ -270,9 +278,10 @@ public class forgetThemAllScript : MonoBehaviour
 
 			if(wiresCut.Count() == 13)
 			{
-				Debug.LogFormat("[Forget Them All #{0}] All wires cut before module is ready to be solved. Autosolving. (Like, seriously?? 13 strikes and you're still alive? Jeez...)", moduleId);
+				Debug.LogFormat("[Forget Them All #{0}] All wires were cut upon the module being ready to calculate. Disarming...", moduleId);
                 moduleSolved = true;
                 GetComponent<KMBombModule>().HandlePass();
+				return;
 			}
 
 			CalcFinalSolution();
@@ -297,16 +306,16 @@ public class forgetThemAllScript : MonoBehaviour
 				LEDs[Array.IndexOf(colors, i)].GetComponentInChildren<Renderer>().material = lightColors[i];
 			}
 		}
-
-		String stageText = "";
+		// Commented out, ToString with one overload method takes up less space.
+/*		String stageText = "";
 
 		if(currentStage < 100)
 			stageText += "0";
 		if(currentStage < 10)
 			stageText += "0";
-		stageText += currentStage + "";
+		stageText += currentStage + "";*/
 
-		stageNo.text = stageText;
+		stageNo.text = currentStage.ToString("000");
 	}
 
 	void ShowFinalStage()
@@ -315,7 +324,8 @@ public class forgetThemAllScript : MonoBehaviour
 
 		for(int i = 0; i < 13; i++)
 		{
-			LEDs[Array.IndexOf(colors, i)].GetComponentInChildren<Renderer>().material = lightColors[i];
+			
+			LEDs[Array.IndexOf(colors, i)].GetComponentInChildren<Renderer>().material = wiresCut.Contains(Array.IndexOf(colors, i)) ? lightColors[13] : lightColors[i];
 		}
 	}
 
@@ -402,8 +412,13 @@ public class forgetThemAllScript : MonoBehaviour
 				wiresToCut.RemoveAt(index);
 			}
 		}
+		if (cutOrder.Any())
+			Debug.LogFormat("[Forget Them All #{0}] Wire cut order is {1}.", moduleId, ListToString(cutOrder));
+		else
+		{
+			Debug.LogFormat("[Forget Them All #{0}] Targeted module has NO valid characters in its module name! Cut any wire to solve the module.", moduleId);
+		}
 
-		Debug.LogFormat("[Forget Them All #{0}] Wire cut order is {1}.", moduleId, ListToString(cutOrder));
 	}
 
 	int GetCharColor(char c)
@@ -460,9 +475,9 @@ public class forgetThemAllScript : MonoBehaviour
 			case 'M':
 			case 'Z':
 				return 12;
+			default:
+				return -1;
 		}
-
-		return -1;
 	}
 
 	String ListToString(List<int> l)
@@ -478,7 +493,36 @@ public class forgetThemAllScript : MonoBehaviour
 
 		return res + "]";
 	}
-	private string TwitchHelpMessage = "!{0} cut 1 2 3 [wires are numbered 1–13 from left to right]";
+	IEnumerator FakeSolveHandling()
+	{
+		stageNo.text = "---";
+		moduleSolved = true;
+		List<int> wiresToCutScrambled = new List<int>();
+		while (wiresToCutScrambled.Count < wireInt.Length - wiresCut.Count)
+		{
+			int x = rnd.Range(0, wireInt.Length);
+			if (!(wiresCut.Contains(x) || wiresToCutScrambled.Contains(x)))
+			{
+				wiresToCutScrambled.Add(x);
+			}
+		}
+		for (var x = 0; x < wiresToCutScrambled.Count; x++)
+		{
+			wireInt[wiresToCutScrambled[x]].OnInteract();
+			if (x < wiresToCutScrambled.Count - 1)
+			yield return new WaitForSeconds(0.1f);
+		}
+		yield return null;
+		StartCoroutine(HandleSolving());
+	}
+	void TwitchHandleForcedSolve()
+	{
+		if (!moduleSolved)
+			Debug.LogFormat("[Forget Them All #{0}] A force solve has been issued viva TP Handler.", moduleId);
+		StartCoroutine(FakeSolveHandling());
+	}
+
+	private readonly string TwitchHelpMessage = "Cut the following wires with \"!{0} cut 1 2 3 ...\" Wires are numbered 1–13 from left to right on the module.";
     IEnumerator ProcessTwitchCommand(string command)
     {
         var m = Regex.Match(command, @"^\s*(?:cut\s+)?([\d ]+)\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -489,16 +533,21 @@ public class forgetThemAllScript : MonoBehaviour
         var wiresToCut = new List<KMSelectable>();
         foreach (var number in m.Groups[1].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
         {
-            if (!int.TryParse(number, out value) || value < 1 || value > 13)
-            {
-                yield return string.Format("sendtochaterror Number too {0}! Wires are numbered 1–13.", value < 1 ? "small" : "large");
-                yield break;
-            }
-            if (wiresToCut.Contains(wireInt[value - 1]))
-            {
-                yield return string.Format("sendtochaterror You’re trying to cut wire {0} twice.", value);
-                yield break;
-            }
+			if (!int.TryParse(number, out value) || value < 1 || value > 13)
+			{
+				yield return string.Format("sendtochaterror The following wire in position {0} does not exist! Wires are numbered 1 – 13 from left to right.", value);
+				yield break;
+			}
+			else if (wiresToCut.Contains(wireInt[value - 1]))
+			{
+				yield return string.Format("sendtochaterror You’re trying to cut wire {0} twice! The full command has been voided.", value);
+				yield break;
+			}
+			else if (wiresCut.Contains(value - 1))
+			{
+				yield return string.Format("sendtochaterror You’re trying to cut wire {0} that is already cut! The full command has been voided.", value);
+				yield break;
+			}
             wiresToCut.Add(wireInt[value - 1]);
         }
 
