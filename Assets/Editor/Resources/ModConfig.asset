@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: ModConfig
   m_EditorClassIdentifier: 
   id: forgetThemAll
-  title: Forget Them All (Local Build)
+  title: Forget Them All
   description: "Remembering where you've been sure helps figuring out where you're
     going to.\n\r\nModule by TheThirdMan\r\nmoduleID: forgetThemAll\r\n\r\nGitHub
     Repository: https://github.com/luisdiogo98/ktane-forgetThemAll\n\r\nManual HTML:

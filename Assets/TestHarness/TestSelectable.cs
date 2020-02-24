@@ -142,10 +142,6 @@ public class TestSelectable : MonoBehaviour
     public void Deselect()
     {
         Highlight.Off();
-        if (ModSelectable.OnHighlightEnded != null)
-        {
-            ModSelectable.OnHighlightEnded();
-        }
         if (ModSelectable.OnDeselect != null)
         {
             ModSelectable.OnDeselect();

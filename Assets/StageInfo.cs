@@ -51,13 +51,13 @@ public class StageInfo {
 		this.moduleName = moduleName;
 
 		Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module is {2}.", moduleId, stageNo, moduleName);
-		// Yellow LED Toggle
+
 		if(moduleName.IndexOf("wire",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[0] = !LED[0];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module name contains \"wire\". Toggling Yellow LED.", moduleId, stageNo);
 		}
-		// Grey LED Toggle
+
 		if(moduleName.IndexOf("button",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[1] = !LED[1];
@@ -68,25 +68,25 @@ public class StageInfo {
 			LED[1] = !LED[1];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module name contains \"key\". Toggling Grey LED.", moduleId, stageNo);
 		}
-		// Blue LED Toggle
+
 		if(moduleName.IndexOf("maze",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[2] = !LED[2];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"maze\". Toggling Blue LED.", moduleId, stageNo);
 		}
-		// Green LED Toggle
+
 		if(moduleName.IndexOf("simon",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[3] = !LED[3];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"simon\". Toggling Green LED.", moduleId, stageNo);
 		}
-		// Orange LED Toggle
+
 		if(moduleName.IndexOf("morse",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[4] = !LED[4];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"morse\". Toggling Orange LED.", moduleId, stageNo);
 		}
-		// Red LED Toggle
+
 		if(moduleName.IndexOf("cruel",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[5] = !LED[5];
@@ -112,7 +112,7 @@ public class StageInfo {
 			LED[5] = !LED[5];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"faulty\". Toggling Red LED.", moduleId, stageNo);
 		}
-		// Lime LED Toggle
+
 		if(moduleName.IndexOf("math",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[6] = !LED[6];
@@ -138,7 +138,7 @@ public class StageInfo {
 			LED[6] = !LED[6];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"logic\". Toggling Lime LED.", moduleId, stageNo);
 		}
-		// Cyan LED Toggle
+
 		if(moduleName.IndexOf("word",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[7] = !LED[7];
@@ -169,7 +169,7 @@ public class StageInfo {
 			LED[7] = !LED[7];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"alphabet\". Toggling Cyan LED.", moduleId, stageNo);
 		}
-		// Brown LED Toggle
+
 		if(moduleName.IndexOf("code",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[8] = !LED[8];
@@ -180,7 +180,7 @@ public class StageInfo {
 			LED[8] = !LED[8];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"cipher\". Toggling Brown LED.", moduleId, stageNo);
 		}
-		// White LED Toggle
+
 		if(moduleName.IndexOf("light",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[9] = !LED[9];
@@ -191,7 +191,7 @@ public class StageInfo {
 			LED[9] = !LED[9];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"LED\". Toggling White LED.", moduleId, stageNo);
 		}
-		// Purple LED Toggle
+
 		if(moduleName.IndexOf("square",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[10] = !LED[10];
@@ -217,7 +217,7 @@ public class StageInfo {
 			LED[10] = !LED[10];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"sphere\". Toggling Purple LED.", moduleId, stageNo);
 		}
-		// Magenta LED Toggle
+
 		if(moduleName.IndexOf("color",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[11] = !LED[11];
@@ -228,7 +228,7 @@ public class StageInfo {
 			LED[11] = !LED[11];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"colour\". Toggling Magenta LED.", moduleId, stageNo);
 		}
-		// Pink LED toggling
+
 		if(moduleName.IndexOf("melody",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LED[12] = !LED[12];
@@ -284,8 +284,8 @@ public class StageInfo {
 				return "Magenta";
 			case 12:
 				return "Pink";
-			default:
-				return "";
 		}
+
+		return "";
 	}
 }
