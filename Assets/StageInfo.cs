@@ -43,7 +43,7 @@ public class StageInfo {
 			}
 		}
 
-		return ret + "]";
+		return ret.Trim() + "]";
 	}
 
 	public void SetModuleName(String moduleName)

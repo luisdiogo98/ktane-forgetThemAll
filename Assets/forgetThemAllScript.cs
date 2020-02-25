@@ -279,8 +279,7 @@ public class forgetThemAllScript : MonoBehaviour
 			if(wiresCut.Count() == 13)
 			{
 				Debug.LogFormat("[Forget Them All #{0}] All wires were cut upon the module being ready to calculate. Disarming...", moduleId);
-                moduleSolved = true;
-                GetComponent<KMBombModule>().HandlePass();
+				StartCoroutine(HandleSolving());
 				return;
 			}
 
@@ -398,7 +397,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 		for(int i = 0; i < 13; i++)
 		{
-			if(wiresCut.FindIndex(x => x == colors[i]) < 0)
+			if(!wiresCut.Contains(i))
 				wiresToCut.Add(colors[i]);
 		}
 
