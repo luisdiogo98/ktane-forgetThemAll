@@ -133,8 +133,10 @@ public class forgetThemAllScript : MonoBehaviour
 
 		List<string> curSolvedModules = bomb.GetSolvedModuleNames().Where(a => !ignoredModules.Contains(a)).ToList();
 
-		foreach (string solvedModName in solvedModuleNames.Union(queuedSolvedNames))
+		foreach (string solvedModName in solvedModuleNames)
 			curSolvedModules.Remove(solvedModName);
+		foreach (string queuedSolvedName in queuedSolvedNames)
+			curSolvedModules.Remove(queuedSolvedName);
 		if (curSolvedModules.Count > 0)
 			queuedSolvedNames.AddRange(curSolvedModules);
 
