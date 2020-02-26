@@ -552,21 +552,6 @@ Prefab:
       propertyPath: m_RootOrder
       value: 3
       objectReference: {fileID: 0}
-    - target: {fileID: 102904790857181970, guid: 52a5b78c9e78e1f40b89b848dc2909cb,
-        type: 2}
-      propertyPath: m_Text
-      value: FTA
-      objectReference: {fileID: 0}
-    - target: {fileID: 102904790857181970, guid: 52a5b78c9e78e1f40b89b848dc2909cb,
-        type: 2}
-      propertyPath: m_Anchor
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 102904790857181970, guid: 52a5b78c9e78e1f40b89b848dc2909cb,
-        type: 2}
-      propertyPath: m_Alignment
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 52a5b78c9e78e1f40b89b848dc2909cb, type: 2}
   m_IsPrefabParent: 0
