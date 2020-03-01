@@ -417,7 +417,7 @@ public class forgetThemAllScript : MonoBehaviour
 			Debug.LogFormat("[Forget Them All #{0}] Wire cut order is {1}.", moduleId, ListToString(cutOrder));
 		else
 		{
-			Debug.LogFormat("[Forget Them All #{0}] Targeted module has NO valid characters in its module name! Cut any wire to solve the module.", moduleId);
+			Debug.LogFormat("[Forget Them All #{0}] Remaining uncut wires have no characters in relation to the module name! Cut any wire to solve the module.", moduleId);
 		}
 
 	}
