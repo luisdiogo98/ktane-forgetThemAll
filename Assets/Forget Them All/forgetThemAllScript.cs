@@ -16,25 +16,28 @@ public class forgetThemAllScript : MonoBehaviour
 
 	public TextMesh stageNo;
 
-	public GameObject[] wires;
+	public HandleWireCut[] wireHandlers;
+
+	public TextMesh[] colorblindTexts;
+	public Renderer[] lightsRenderer;
+
 	public KMSelectable[] wireInt;
 	public Material[] wireColors;
 
-	public GameObject[] LEDs;
 	public Material[] lightColors;
 
 	//Logging
 	static int moduleIdCounter = 1;
-    int moduleId;
-    private bool moduleSolved;
+	int moduleId;
+	private bool moduleSolved;
 
-	int[] colors = new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+	int[] colors = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
 	bool readyToSolve = false;
 
 	int stageCount;
-	int currentStage = 0;
-	int lastCalcStage = -1;
+	public int currentStage = 0;
+	public int lastCalcStage = -1;
 	List<int> wiresCut = new List<int>();
 	StageInfo[] stages;
 	int keyStage;
@@ -42,17 +45,20 @@ public class forgetThemAllScript : MonoBehaviour
 
 
 	int delayer = 0;
-	List<string> solvedModuleNames = new List<string>();
-	List<string> queuedSolvedNames = new List<string>();
+	public List<string> solvedModuleNames = new List<string>();
+	public List<string> queuedSolvedNames = new List<string>();
 	int startTime;
+
+	bool colorblindDetected = false;
+	public KMColorblindMode colorblindMode;
 
 	void Awake()
 	{
 		moduleId = moduleIdCounter++;
-        GetComponent<KMBombModule>().OnActivate += Activate;
+		GetComponent<KMBombModule>().OnActivate += Activate;
 
 		if (ignoredModules == null)
-            ignoredModules = GetComponent<KMBossModule>().GetIgnoredModules("Forget Them All", new string[]{
+			ignoredModules = GetComponent<KMBossModule>().GetIgnoredModules("Forget Them All", new string[]{
 				"Forget Them All",
 				"Alchemy",
 				"Forget Everything",
@@ -69,7 +75,7 @@ public class forgetThemAllScript : MonoBehaviour
 				"The Time Keeper",
 				"Timing is Everything",
 				"Turn the Key"
-            });
+			});
 
 		for (int x = 0; x < wireInt.Length; x++)
 		{
@@ -91,11 +97,23 @@ public class forgetThemAllScript : MonoBehaviour
 				wireInt[11].OnInteract += delegate () { CutWire(11); return false; };
 				wireInt[12].OnInteract += delegate () { CutWire(12); return false; };*/
 		stageNo.text = "---";
+
+		try
+		{
+			colorblindDetected = colorblindMode.ColorblindModeActive;
+		}
+		catch {
+			colorblindDetected = false;
+		}
+		for (int i = 0; i < 13; i++)
+		{
+			colorblindTexts[i].text = "";
+		}
 	}
 	bool canStart = false;
 	void Activate()
 	{
-		startTime = (int) (bomb.GetTime() / 60);
+		startTime = (int)(bomb.GetTime() / 60);
 		if (CheckAutoSolve())
 		{
 			Debug.LogFormat("[Forget Them All #{0}] There are 0 modules not ignored on this bomb. Autosolving...", moduleId);
@@ -118,17 +136,17 @@ public class forgetThemAllScript : MonoBehaviour
 		stageNo.text = "";
 		yield return null;
 	}
-	void Start ()
+	void Start()
 	{
 		RandomizeColors();
 	}
 
-	void Update ()
+	void Update()
 	{
-        if (moduleSolved || !canStart)
-            return;
+		if (moduleSolved || !canStart)
+			return;
 
-		if(delayer > 0)
+		if (delayer > 0)
 			delayer--;
 
 		List<string> curSolvedModules = bomb.GetSolvedModuleNames().Where(a => !ignoredModules.Contains(a)).ToList();
@@ -156,27 +174,21 @@ public class forgetThemAllScript : MonoBehaviour
 	void CutWire(int wire)
 	{
 		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.WireSnip, transform);
-		wireInt[wire].enabled = false;
-		wires[wire].transform.Find("default").gameObject.SetActive(false);
-		wires[wire].transform.Find("hl").gameObject.SetActive(false);
-		wires[wire].transform.Find("wireCut").gameObject.SetActive(true);
-
-		foreach(Renderer r in wires[wire].GetComponentsInChildren<Renderer>())
-			r.material = wireColors[colors[wire]];
 
 		wiresCut.Add(wire);
 
-		if(!readyToSolve && !moduleSolved)
+		if (!readyToSolve && !moduleSolved)
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Strike! [{1}] wire cut before module is ready to be solved.", moduleId, GetColorName(colors[wire]));
 			GetComponent<KMBombModule>().HandleStrike();
 			return;
 		}
-		LEDs[wire].transform.Find("light").GetComponentInChildren<Renderer>().material = lightColors[13];
+		lightsRenderer[wire].material = lightColors[13];
+		colorblindTexts[wire].text = "";
 		if (moduleSolved)
 			return;
-		int index = cutOrder.FindIndex(x => x == colors[wire]);
-		if(index != -1)
+		int index = cutOrder.IndexOf(colors[wire]);
+		if (index != -1)
 			cutOrder.RemoveAt(index);
 
 		if (index == 0)
@@ -194,7 +206,7 @@ public class forgetThemAllScript : MonoBehaviour
 		}
 		else if (cutOrder.Any())
 		{
-			Debug.LogFormat("[Forget Them All #{0}] Strike! {1} wire cut. Expecting {2} wire. Remaining wires order: {3}.", moduleId, GetColorName(colors[wire]), GetColorName(cutOrder[0]), ListToString(cutOrder));
+			Debug.LogFormat("[Forget Them All #{0}] Strike! {1} wire cut. Expecting {2} wire. Remaining wires to cut in order: {3}.", moduleId, GetColorName(colors[wire]), GetColorName(cutOrder[0]), ListToString(cutOrder));
 			GetComponent<KMBombModule>().HandleStrike();
 		}
 		else if (!moduleSolved)
@@ -204,9 +216,9 @@ public class forgetThemAllScript : MonoBehaviour
 		}
 	}
 
-	String GetColorName(int color)
+	string GetColorName(int color)
 	{
-		switch(color)
+		switch (color)
 		{
 			case 0:
 				return "Yellow";
@@ -238,15 +250,47 @@ public class forgetThemAllScript : MonoBehaviour
 				return "";
 		}
 	}
-
+	string GetColorAbbrev(int color)
+	{
+		switch (color)
+		{
+			case 0:
+				return "Y";
+			case 1:
+				return "A";
+			case 2:
+				return "B";
+			case 3:
+				return "G";
+			case 4:
+				return "O";
+			case 5:
+				return "R";
+			case 6:
+				return "L";
+			case 7:
+				return "C";
+			case 8:
+				return "N";
+			case 9:
+				return "W";
+			case 10:
+				return "P";
+			case 11:
+				return "M";
+			case 12:
+				return "I";
+			default:
+				return "?";
+		}
+	}
 	void RandomizeColors()
 	{
 		colors = colors.OrderBy(x => rnd.Range(0, 1000)).ToArray();
 
-		for(int i = 0; i < wires.Count(); i++)
+		for (int i = 0; i < wireHandlers.Count(); i++)
 		{
-			foreach(Renderer r in wires[i].GetComponentsInChildren<Renderer>())
-				r.material = wireColors[colors[i]];
+			wireHandlers[i].UpdateWireColor(wireColors[colors[i]]);
 		}
 	}
 
@@ -259,9 +303,9 @@ public class forgetThemAllScript : MonoBehaviour
 	void CreateStages()
 	{
 		stages = new StageInfo[stageCount];
-		for(int i = 0; i < stages.Count(); i++)
+		for (int i = 0; i < stages.Count(); i++)
 		{
-			stages[i] = new StageInfo(i+1, moduleId);
+			stages[i] = new StageInfo(i + 1, moduleId);
 		}
 	}
 
@@ -269,16 +313,16 @@ public class forgetThemAllScript : MonoBehaviour
 	{
 		currentStage++;
 		delayer = 300;
-		if(currentStage > stageCount)
+		if (currentStage > stageCount)
 		{
-			if(readyToSolve)
+			if (readyToSolve)
 				return;
 
 			readyToSolve = true;
 
 			ShowFinalStage();
 
-			if(wiresCut.Count() == 13)
+			if (wiresCut.Count() == 13)
 			{
 				Debug.LogFormat("[Forget Them All #{0}] All wires were cut upon the module being ready to calculate. Disarming...", moduleId);
 				StartCoroutine(HandleSolving());
@@ -290,43 +334,40 @@ public class forgetThemAllScript : MonoBehaviour
 			return;
 		}
 
-		foreach(GameObject LED in LEDs)
-		{
-			LED.transform.Find("light").GetComponentInChildren<Renderer>().material = lightColors[13];
-		}
-
 		StageInfo s = stages[currentStage - 1];
 
 		Debug.LogFormat("[Forget Them All #{0}] --------------------------- Stage {1} ---------------------------", moduleId, currentStage);
 		Debug.LogFormat("[Forget Them All #{0}] Stage {1} LED: {2}", moduleId, currentStage, s.GetOnLED());
 
-		for(int i = 0; i < s.LED.Count(); i++)
+		for (int i = 0; i < s.LED.Count(); i++)
 		{
-			if(s.LED[i])
-			{
-				LEDs[Array.IndexOf(colors, i)].GetComponentInChildren<Renderer>().material = lightColors[i];
-			}
+			int idx = Array.IndexOf(colors, i);
+			lightsRenderer[idx].material = s.LED[i] ? lightColors[i] : lightColors[13];
+			colorblindTexts[idx].text = colorblindDetected && s.LED[i] ? GetColorAbbrev(colors[idx]) : "";
+			colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
 		}
 		// Commented out, ToString with one overload method takes up less space.
-/*		String stageText = "";
+		/*		String stageText = "";
 
-		if(currentStage < 100)
-			stageText += "0";
-		if(currentStage < 10)
-			stageText += "0";
-		stageText += currentStage + "";*/
+				if(currentStage < 100)
+					stageText += "0";
+				if(currentStage < 10)
+					stageText += "0";
+				stageText += currentStage + "";*/
 
-		stageNo.text = currentStage.ToString("000");
+		stageNo.text = (currentStage % 1000).ToString("000");
 	}
 
 	void ShowFinalStage()
 	{
 		stageNo.text = "---";
 
-		for(int i = 0; i < 13; i++)
+		for (int i = 0; i < 13; i++)
 		{
-			
-			LEDs[Array.IndexOf(colors, i)].GetComponentInChildren<Renderer>().material = wiresCut.Contains(Array.IndexOf(colors, i)) ? lightColors[13] : lightColors[i];
+			int idx = Array.IndexOf(colors, i);
+			lightsRenderer[idx].material = wiresCut.Contains(idx) ? lightColors[13] : lightColors[i];
+			colorblindTexts[idx].text = colorblindDetected && !wiresCut.Contains(idx) ? GetColorAbbrev(colors[idx]) : "";
+			colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
 		}
 	}
 
@@ -334,9 +375,9 @@ public class forgetThemAllScript : MonoBehaviour
 	{
 		Debug.LogFormat("[Forget Them All #{0}] --------------------------- Solving ---------------------------", moduleId, currentStage);
 
-		int[] totalLED = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		int[] totalLED = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-		foreach(StageInfo si in stages)
+		foreach (StageInfo si in stages)
 		{
 			totalLED = totalLED.Select((x, index) => x + (si.LED[index] ? 1 : 0)).ToArray();
 		}
@@ -364,7 +405,7 @@ public class forgetThemAllScript : MonoBehaviour
 		int red = totalLED[5] * strikeCount;
 		int lime = totalLED[6] * snTotal;
 		int cyan = totalLED[7] * snLetters;
-		int brown =	totalLED[8] * portTypes;
+		int brown = totalLED[8] * portTypes;
 		int white = totalLED[9] * onInd;
 		int purple = totalLED[10] * totalLED[10];
 		int magenta = totalLED[11] * offInd;
@@ -387,7 +428,7 @@ public class forgetThemAllScript : MonoBehaviour
 		int value = yellow + grey + blue + green + orange + red + lime + cyan + brown + white + purple + magenta + pink;
 
 		keyStage = value % stageCount;
-		if(keyStage == 0)
+		if (keyStage == 0)
 			keyStage = stageCount;
 
 		Debug.LogFormat("[Forget Them All #{0}] Final value = {1}. Key stage is {2} - {3}.", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
@@ -397,17 +438,17 @@ public class forgetThemAllScript : MonoBehaviour
 	{
 		List<int> wiresToCut = new List<int>();
 
-		for(int i = 0; i < 13; i++)
+		for (int i = 0; i < 13; i++)
 		{
-			if(!wiresCut.Contains(i))
+			if (!wiresCut.Contains(i))
 				wiresToCut.Add(colors[i]);
 		}
 
-		for(int i = 0; i < stages[keyStage - 1].moduleName.Length; i++)
+		for (int i = 0; i < stages[keyStage - 1].moduleName.Length; i++)
 		{
 			int charColor = GetCharColor(stages[keyStage - 1].moduleName[i]);
 			int index = wiresToCut.FindIndex(x => x == charColor);
-			if(index >= 0)
+			if (index >= 0)
 			{
 				cutOrder.Add(charColor);
 				wiresToCut.RemoveAt(index);
@@ -425,7 +466,7 @@ public class forgetThemAllScript : MonoBehaviour
 	int GetCharColor(char c)
 	{
 		char conv = Char.ToUpper(c);
-		switch(conv)
+		switch (conv)
 		{
 			case 'A':
 			case 'N':
@@ -481,14 +522,14 @@ public class forgetThemAllScript : MonoBehaviour
 		}
 	}
 
-	String ListToString(List<int> l)
+	string ListToString(List<int> l)
 	{
-		String res = "[";
+		string res = "[";
 
-		for(int i = 0; i < l.Count(); i++)
+		for (int i = 0; i < l.Count(); i++)
 		{
 			res += GetColorName(l[i]);
-			if(i != l.Count() - 1)
+			if (i != l.Count() - 1)
 				res += " ";
 		}
 
@@ -511,7 +552,7 @@ public class forgetThemAllScript : MonoBehaviour
 		{
 			wireInt[wiresToCutScrambled[x]].OnInteract();
 			if (x < wiresToCutScrambled.Count - 1)
-			yield return new WaitForSeconds(0.1f);
+				yield return new WaitForSeconds(0.1f);
 		}
 		yield return null;
 		StartCoroutine(HandleSolving());
@@ -523,36 +564,46 @@ public class forgetThemAllScript : MonoBehaviour
 		StartCoroutine(FakeSolveHandling());
 	}
 
-	private readonly string TwitchHelpMessage = "Cut the following wires with \"!{0} cut 1 2 3 ...\" Wires are numbered 1–13 from left to right on the module.";
-    IEnumerator ProcessTwitchCommand(string command)
-    {
-        var m = Regex.Match(command, @"^\s*(?:cut\s+)?([\d ]+)\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-        if (!m.Success)
-            yield break;
+#pragma warning disable IDE0051 // Remove unused private members
+	private readonly string TwitchHelpMessage = "Cut the following wires with \"!{0} cut 1 2 3 ...\" Wires are numbered 1–13 from left to right on the module.\n To activate colorblind mode: \"!{0} colorblind\"";
+#pragma warning restore IDE0051 // Remove unused private members
+	IEnumerator ProcessTwitchCommand(string command)
+	{
+		string intereptedCommand = command.ToLower();
+		if (intereptedCommand.RegexMatch(@"^colou?rblind$"))
+		{
+			yield return null;
+			colorblindDetected = true;
+		}
+		else if (intereptedCommand.RegexMatch(@"^cut(\s\d+)+$"))
+		{
+			int value;
+			List<KMSelectable> wiresToCut = new List<KMSelectable>();
+			string[] intereptedDigits = intereptedCommand.Substring(4).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+			foreach (string number in intereptedDigits)
+			{
+				if (!int.TryParse(number, out value) || value < 1 || value > 13)
+				{
+					yield return string.Format("sendtochaterror The following wire in position {0} does not exist! Wires are numbered 1 – 13 from left to right.", value);
+					yield break;
+				}
+				else if (wiresToCut.Contains(wireInt[value - 1]))
+				{
+					yield return string.Format("sendtochaterror You’re trying to cut wire {0} twice! The full command has been voided.", value);
+					yield break;
+				}
+				else if (wiresCut.Contains(value - 1))
+				{
+					yield return string.Format("sendtochaterror You’re trying to cut wire {0} that is already cut! The full command has been voided.", value);
+					yield break;
+				}
+				wiresToCut.Add(wireInt[value - 1]);
+			}
 
-        int value;
-        var wiresToCut = new List<KMSelectable>();
-        foreach (var number in m.Groups[1].Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
-        {
-			if (!int.TryParse(number, out value) || value < 1 || value > 13)
-			{
-				yield return string.Format("sendtochaterror The following wire in position {0} does not exist! Wires are numbered 1 – 13 from left to right.", value);
-				yield break;
-			}
-			else if (wiresToCut.Contains(wireInt[value - 1]))
-			{
-				yield return string.Format("sendtochaterror You’re trying to cut wire {0} twice! The full command has been voided.", value);
-				yield break;
-			}
-			else if (wiresCut.Contains(value - 1))
-			{
-				yield return string.Format("sendtochaterror You’re trying to cut wire {0} that is already cut! The full command has been voided.", value);
-				yield break;
-			}
-            wiresToCut.Add(wireInt[value - 1]);
-        }
-
-        yield return null;
-        yield return wiresToCut;
-    }
+			yield return null;
+			yield return wiresToCut;
+		}
+		else
+			yield break;
+	}
 }

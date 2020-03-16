@@ -12,7 +12,7 @@ public class StageInfo {
 	public int moduleId;
 
 	public bool[] LED = new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false};
-	public String moduleName;
+	public string moduleName;
 
 	public StageInfo(int stageNo, int moduleId)
 	{
@@ -30,9 +30,9 @@ public class StageInfo {
 
 	}
 
-	public String GetOnLED()
+	public string GetOnLED()
 	{
-		String ret = "[";
+		string ret = "[";
 		for(int i = 0; i < LED.Count(); i++)
 		{
 			if(LED[i])
@@ -46,7 +46,7 @@ public class StageInfo {
 		return ret.Trim() + "]";
 	}
 
-	public void SetModuleName(String moduleName)
+	public void SetModuleName(string moduleName)
 	{
 		this.moduleName = moduleName;
 
@@ -254,7 +254,7 @@ public class StageInfo {
 
 	}
 
-	String GetColorName(int color)
+	string GetColorName(int color)
 	{
 		switch(color)
 		{
