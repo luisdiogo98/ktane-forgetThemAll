@@ -346,18 +346,24 @@ public class forgetThemAllScript : MonoBehaviour
 			colorblindTexts[idx].text = colorblindDetected && s.LED[i] ? GetColorAbbrev(colors[idx]) : "";
 			colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
 		}
-		// Commented out, ToString with one overload method takes up less space.
-		/*		String stageText = "";
-
-				if(currentStage < 100)
-					stageText += "0";
-				if(currentStage < 10)
-					stageText += "0";
-				stageText += currentStage + "";*/
 
 		stageNo.text = (currentStage % 1000).ToString("000");
 	}
+	void DisplayCurrentStage(int stageNum)
+	{
+		if (stageNum <= 0 || stageNum - 1 >= stages.Length) return;
+		StageInfo s = stages[stageNum - 1];
 
+		for (int i = 0; i < s.LED.Count(); i++)
+		{
+			int idx = Array.IndexOf(colors, i);
+			lightsRenderer[idx].material = s.LED[i] ? lightColors[i] : lightColors[13];
+			colorblindTexts[idx].text = colorblindDetected && s.LED[i] ? GetColorAbbrev(colors[idx]) : "";
+			colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
+		}
+
+		stageNo.text = (currentStage % 1000).ToString("000");
+	}
 	void ShowFinalStage()
 	{
 		stageNo.text = "---";
@@ -573,7 +579,15 @@ public class forgetThemAllScript : MonoBehaviour
 		if (intereptedCommand.RegexMatch(@"^colou?rblind$"))
 		{
 			yield return null;
-			colorblindDetected = true;
+			if (!colorblindDetected)
+			{
+				colorblindDetected = true;
+				if (readyToSolve)
+					ShowFinalStage();
+				else
+					DisplayCurrentStage(currentStage);
+			}
+			
 		}
 		else if (intereptedCommand.RegexMatch(@"^cut(\s\d+)+$"))
 		{
