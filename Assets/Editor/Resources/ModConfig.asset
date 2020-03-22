@@ -14,11 +14,15 @@ MonoBehaviour:
   id: forgetThemAll
   title: Forget Them All (Local Build)
   description: "Remembering where you've been sure helps figuring out where you're
-    going to.\n\r\nModule by TheThirdMan\r\nmoduleID: forgetThemAll\r\n\r\nGitHub
-    Repository: https://github.com/luisdiogo98/ktane-forgetThemAll\n\r\nManual HTML:
-    https://ktane.timwi.de/HTML/Forget%20Them%20All.html\r\nManual PDF: https://ktane.timwi.de/PDF/Forget%20Them%20All.pdf\r\n\r\nAny
-    problems/suggestions, feel free to contact me on the KTaNE Discord @TheThirdMan.
-    Join the KTaNE Discord here: https://discord.gg/Fv7YEDj"
+    going to.\n\r\n[b]This is a reupload of the original module with permission from
+    the original creator. Please disable/unsubscribe the original version as that
+    is no longer maintained here: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1760215002]https://steamcommunity.com/sharedfiles/filedetails/?id=1760215002[/url][/b]\n\nOriginally
+    made by TheThirdMan\r\nReuploaded and maintained by VFlyer\n\nmoduleID: forgetThemAll\r\n\n\rGithub
+    (Current Maintained Version): [url=https://github.com/VFlyer/ktane-forgetThemAll]https://github.com/VFlyer/ktane-forgetThemAll[/url]\nGitHub
+    (Original Version): [url=https://github.com/luisdiogo98/ktane-forgetThemAll]https://github.com/luisdiogo98/ktane-forgetThemAll[/url]\n\n\r\nManual
+    HTML: [url=https://ktane.timwi.de/HTML/Forget%20Them%20All.html\r]https://ktane.timwi.de/HTML/Forget%20Them%20All.html\r[/url]\nManual
+    PDF: [url=https://ktane.timwi.de/PDF/Forget%20Them%20All.pdf\r]https://ktane.timwi.de/PDF/Forget%20Them%20All.pdf\r[/url]\n\r\nThe
+    KTaNE Discord is linked here: https://discord.gg/Fv7YEDj"
   version: 1.8
   outputFolder: build
-  previewImage: {fileID: 2800000, guid: a4f5d8d305efed14f933256e3660ff33, type: 3}
+  previewImage: {fileID: 2800000, guid: fa0a0975b0fa5124bb96bec22236b27a, type: 3}
