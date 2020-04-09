@@ -82,8 +82,8 @@ public class forgetThemAllScript : MonoBehaviour
 			int y = x;
 			wireInt[x].OnInteract += delegate () { CutWire(y); return false; };
 		}
-		// Inefficient coding, more efficient coding is provided above.
-		/*		wireInt[0].OnInteract += delegate () { CutWire(0); return false; };
+        // Inefficient coding, more efficient coding is provided above.
+        /*		wireInt[0].OnInteract += delegate () { CutWire(0); return false; };
 				wireInt[1].OnInteract += delegate () { CutWire(1); return false; };
 				wireInt[2].OnInteract += delegate () { CutWire(2); return false; };
 				wireInt[3].OnInteract += delegate () { CutWire(3); return false; };
@@ -96,16 +96,17 @@ public class forgetThemAllScript : MonoBehaviour
 				wireInt[10].OnInteract += delegate () { CutWire(10); return false; };
 				wireInt[11].OnInteract += delegate () { CutWire(11); return false; };
 				wireInt[12].OnInteract += delegate () { CutWire(12); return false; };*/
-		stageNo.text = "---";
+        //stageNo.text = "---";
+        stageNo.text = "";
 
-		try
+        try
 		{
 			colorblindDetected = colorblindMode.ColorblindModeActive;
 		}
 		catch {
 			colorblindDetected = false;
 		}
-		for (int i = 0; i < 13; i++)
+        for (int i = 0; i < 13; i++)
 		{
 			colorblindTexts[i].text = "";
 		}
@@ -113,7 +114,7 @@ public class forgetThemAllScript : MonoBehaviour
 	bool canStart = false;
 	void Activate()
 	{
-		startTime = (int)(bomb.GetTime() / 60);
+        startTime = (int)(bomb.GetTime() / 60);
 		if (CheckAutoSolve())
 		{
 			Debug.LogFormat("[Forget Them All #{0}] There are 0 modules not ignored on this bomb. Autosolving...", moduleId);
@@ -125,15 +126,20 @@ public class forgetThemAllScript : MonoBehaviour
 	}
 	IEnumerator HandleSolving()
 	{
-		moduleSolved = true;
-		GetComponent<KMBombModule>().HandlePass();
 		while (stageNo.text.Length > 0)
 		{
 			string curText = stageNo.text;
 			stageNo.text = curText.Substring(0, curText.Length - 1);
 			yield return new WaitForSeconds(0.1f);
 		}
-		stageNo.text = "";
+        moduleSolved = true;
+        GetComponent<KMBombModule>().HandlePass();
+        stageNo.text = "";
+        for (int i = 0; i < 13; i++)
+        {
+            lightsRenderer[i].material = lightColors[13];
+            colorblindTexts[i].text = "";
+        }
 		yield return null;
 	}
 	void Start()
@@ -146,8 +152,8 @@ public class forgetThemAllScript : MonoBehaviour
 		if (moduleSolved || !canStart)
 			return;
 
-		if (delayer > 0)
-			delayer--;
+        if (delayer > 0)
+            delayer--;
 
 		List<string> curSolvedModules = bomb.GetSolvedModuleNames().Where(a => !ignoredModules.Contains(a)).ToList();
 
@@ -173,7 +179,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	void CutWire(int wire)
 	{
-		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.WireSnip, transform);
+		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.WireSnip, wireInt[wire].transform);
 
 		wiresCut.Add(wire);
 
@@ -541,7 +547,8 @@ public class forgetThemAllScript : MonoBehaviour
 
 		return res + "]";
 	}
-	IEnumerator FakeSolveHandling()
+	/** Old fake solve handler
+     * IEnumerator FakeSolveHandling()
 	{
 		stageNo.text = "---";
 		moduleSolved = true;
@@ -562,33 +569,48 @@ public class forgetThemAllScript : MonoBehaviour
 		}
 		yield return null;
 		StartCoroutine(HandleSolving());
-	}
-	void TwitchHandleForcedSolve()
+	}*/
+	IEnumerator TwitchHandleForcedSolve()
 	{
-		if (!moduleSolved)
+        Debug.LogFormat("[Forget Them All #{0}] A force solve has been issued via TP Handler.", moduleId);
+        while (!readyToSolve)
+        {
+            yield return true;
+        }
+        int start = wiresCut.Count();
+        int end = cutOrder.Count();
+        for (int i = start; i < end; i++)
+        {
+            wireInt[Array.IndexOf(colors, cutOrder[0])].OnInteract();
+            yield return new WaitForSeconds(0.1f);
+        }
+        /**if (!moduleSolved)
 			Debug.LogFormat("[Forget Them All #{0}] A force solve has been issued viva TP Handler.", moduleId);
-		StartCoroutine(FakeSolveHandling());
-	}
+		StartCoroutine(FakeSolveHandling());*/
+    }
 
-#pragma warning disable IDE0051 // Remove unused private members
-	private readonly string TwitchHelpMessage = "Cut the following wires with \"!{0} cut 1 2 3 ...\" Wires are numbered 1–13 from left to right on the module.\n To activate colorblind mode: \"!{0} colorblind\"";
-#pragma warning restore IDE0051 // Remove unused private members
+    #pragma warning disable IDE0051 // Remove unused private members
+	private readonly string TwitchHelpMessage = "Cut the following wires with \"!{0} cut 1 2 3 ...\" Wires are numbered 1–13 from left to right on the module.\n To toggle colorblind mode: \"!{0} colorblind\"";
+    #pragma warning restore IDE0051 // Remove unused private members
 	IEnumerator ProcessTwitchCommand(string command)
 	{
 		string intereptedCommand = command.ToLower();
 		if (intereptedCommand.RegexMatch(@"^colou?rblind$"))
 		{
 			yield return null;
-			if (!colorblindDetected)
+            if (!colorblindDetected)
 			{
 				colorblindDetected = true;
-				if (readyToSolve)
-					ShowFinalStage();
-				else
-					DisplayCurrentStage(currentStage);
 			}
-			
-		}
+            else
+            {
+                colorblindDetected = false;
+            }
+            if (readyToSolve)
+                ShowFinalStage();
+            else
+                DisplayCurrentStage(currentStage);
+        }
 		else if (intereptedCommand.RegexMatch(@"^cut(\s\d+)+$"))
 		{
 			int value;
