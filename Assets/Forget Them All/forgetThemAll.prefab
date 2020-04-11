@@ -714,8 +714,8 @@ GameObject:
   - component: {fileID: 114032158907170340}
   - component: {fileID: 114024699829130106}
   - component: {fileID: 114490929699571012}
-  - component: {fileID: 114442398216050936}
   - component: {fileID: 114591953808809492}
+  - component: {fileID: 114057465464728712}
   - component: {fileID: 114054405323894104}
   m_Layer: 0
   m_Name: forgetThemAll
@@ -7448,7 +7448,19 @@ MonoBehaviour:
   lastCalcStage: -1
   solvedModuleNames: []
   queuedSolvedNames: []
-  colorblindMode: {fileID: 114442398216050936}
+  colorblindMode: {fileID: 114057465464728712}
+--- !u!114 &114057465464728712
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1322676762891086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 270ae1887984f7a419e5b5293b9ab384, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _colorblindMode: 0
 --- !u!114 &114072594069664790
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -8271,18 +8283,6 @@ MonoBehaviour:
   wireUncut: {fileID: 1821934228847158}
   wireCut: {fileID: 1866623221332560}
   wireHL: {fileID: 1736440664939296}
---- !u!114 &114442398216050936
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1322676762891086}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1cfb889a07d5fd4e9baed7960bb397f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _colorblindMode: 0
 --- !u!114 &114450219059398646
 MonoBehaviour:
   m_ObjectHideFlags: 1
