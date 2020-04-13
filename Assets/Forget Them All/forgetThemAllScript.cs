@@ -590,7 +590,7 @@ public class forgetThemAllScript : MonoBehaviour
     }
 
     #pragma warning disable IDE0051 // Remove unused private members
-	private readonly string TwitchHelpMessage = "Cut the following wires with \"!{0} cut 1 2 3 ...\" Wires are numbered 1–13 from left to right on the module.\n To toggle colorblind mode: \"!{0} colorblind\"";
+	private readonly string TwitchHelpMessage = "Cut the following wires with \"!{0} cut 1 2 3 ...\" Wires are numbered 1–13 from left to right on the module. To toggle colorblind mode: \"!{0} colorblind\"";
     #pragma warning restore IDE0051 // Remove unused private members
 	IEnumerator ProcessTwitchCommand(string command)
 	{
@@ -598,15 +598,16 @@ public class forgetThemAllScript : MonoBehaviour
 		if (intereptedCommand.RegexMatch(@"^colou?rblind$"))
 		{
 			yield return null;
-            if (!colorblindDetected)
+/*            if (!colorblindDetected)
 			{
 				colorblindDetected = true;
 			}
             else
             {
                 colorblindDetected = false;
-            }
-            if (readyToSolve)
+            }*/
+			colorblindDetected = !colorblindDetected;
+			if (readyToSolve)
                 ShowFinalStage();
             else
                 DisplayCurrentStage(currentStage);
@@ -638,6 +639,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 			yield return null;
 			yield return wiresToCut;
+			yield return "solve";
 		}
 		else
 			yield break;
