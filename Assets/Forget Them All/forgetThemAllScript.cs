@@ -51,7 +51,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	bool colorblindDetected = false;
 	public KMColorblindMode colorblindMode;
-
+	bool hasDetonated = false;
 	void Awake()
 	{
 		moduleId = moduleIdCounter++;
@@ -99,12 +99,22 @@ public class forgetThemAllScript : MonoBehaviour
         //stageNo.text = "---";
         stageNo.text = "";
 
+		bomb.OnBombExploded += delegate ()
+		{
+			hasDetonated = true;
+			if (!readyToSolve)
+				CalcFinalSolution();
+		};
+
         try
 		{
 			colorblindDetected = colorblindMode.ColorblindModeActive;
 		}
-		catch {
+		catch (Exception error)
+		{
 			colorblindDetected = false;
+			Debug.LogErrorFormat("[Forget Them All #{0}] An exception occured on Forget Them All involving Colorblind Mode. This is not a severe issue. It might just be someone forgetting to assign something again.", moduleId);
+			Debug.LogException(error);
 		}
         for (int i = 0; i < 13; i++)
 		{
@@ -126,13 +136,13 @@ public class forgetThemAllScript : MonoBehaviour
 	}
 	IEnumerator HandleSolving()
 	{
+		moduleSolved = true;
 		while (stageNo.text.Length > 0)
 		{
 			string curText = stageNo.text;
 			stageNo.text = curText.Substring(0, curText.Length - 1);
 			yield return new WaitForSeconds(0.1f);
 		}
-        moduleSolved = true;
         GetComponent<KMBombModule>().HandlePass();
         stageNo.text = "";
         for (int i = 0; i < 13; i++)
@@ -328,7 +338,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 			ShowFinalStage();
 
-			if (wiresCut.Count() == 13)
+			if (wiresCut.Count() >= 13)
 			{
 				Debug.LogFormat("[Forget Them All #{0}] All wires were cut upon the module being ready to calculate. Disarming...", moduleId);
 				StartCoroutine(HandleSolving());
@@ -385,7 +395,13 @@ public class forgetThemAllScript : MonoBehaviour
 
 	void CalcFinalSolution()
 	{
-		Debug.LogFormat("[Forget Them All #{0}] --------------------------- Solving ---------------------------", moduleId, currentStage);
+
+		Debug.LogFormat(hasDetonated ? "[Forget Them All #{0}] ----------------------- Upon Detonation -----------------------" : "[Forget Them All #{0}] --------------------------- Solving ---------------------------", moduleId, currentStage);
+		if (!stages.Any())
+		{
+			Debug.LogFormat("[Forget Them All #{0}] Bomb detonated before stages could be generated.", moduleId);
+			return;
+		}
 
 		int[] totalLED = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -423,19 +439,19 @@ public class forgetThemAllScript : MonoBehaviour
 		int magenta = totalLED[11] * offInd;
 		int pink = totalLED[12] * dBattery;
 
-		Debug.LogFormat("[Forget Them All #{0}] Yellow ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[0], aaBattery, yellow);
-		Debug.LogFormat("[Forget Them All #{0}] Grey ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[1], portPlates, grey);
-		Debug.LogFormat("[Forget Them All #{0}] Blue ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[2], startTime, blue);
-		Debug.LogFormat("[Forget Them All #{0}] Green ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[3], dupPorts, green);
-		Debug.LogFormat("[Forget Them All #{0}] Orange ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[4], moduleCount, orange);
-		Debug.LogFormat("[Forget Them All #{0}] Red ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[5], strikeCount, red);
-		Debug.LogFormat("[Forget Them All #{0}] Lime ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[6], snTotal, lime);
-		Debug.LogFormat("[Forget Them All #{0}] Cyan ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[7], snLetters, cyan);
-		Debug.LogFormat("[Forget Them All #{0}] Brown ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[8], portTypes, brown);
-		Debug.LogFormat("[Forget Them All #{0}] White ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[9], onInd, white);
-		Debug.LogFormat("[Forget Them All #{0}] Purple ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[10], totalLED[10], purple);
-		Debug.LogFormat("[Forget Them All #{0}] Magenta ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[11], offInd, magenta);
-		Debug.LogFormat("[Forget Them All #{0}] Pink ocurrences = {1}. Multiplier = {2}. LED value = {3}.", moduleId, totalLED[12], dBattery, pink);
+		Debug.LogFormat("[Forget Them All #{0}] Yellow ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[0], aaBattery, yellow);
+		Debug.LogFormat("[Forget Them All #{0}] Grey ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[1], portPlates, grey);
+		Debug.LogFormat("[Forget Them All #{0}] Blue ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[2], startTime, blue);
+		Debug.LogFormat("[Forget Them All #{0}] Green ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[3], dupPorts, green);
+		Debug.LogFormat("[Forget Them All #{0}] Orange ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[4], moduleCount, orange);
+		Debug.LogFormat("[Forget Them All #{0}] Red ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[5], strikeCount, red);
+		Debug.LogFormat("[Forget Them All #{0}] Lime ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[6], snTotal, lime);
+		Debug.LogFormat("[Forget Them All #{0}] Cyan ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[7], snLetters, cyan);
+		Debug.LogFormat("[Forget Them All #{0}] Brown ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[8], portTypes, brown);
+		Debug.LogFormat("[Forget Them All #{0}] White ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[9], onInd, white);
+		Debug.LogFormat("[Forget Them All #{0}] Purple ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[10], totalLED[10], purple);
+		Debug.LogFormat("[Forget Them All #{0}] Magenta ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[11], offInd, magenta);
+		Debug.LogFormat("[Forget Them All #{0}] Pink ocurrences: {1}. Multiplier: {2}. LED value: {3}.", moduleId, totalLED[12], dBattery, pink);
 
 		int value = yellow + grey + blue + green + orange + red + lime + cyan + brown + white + purple + magenta + pink;
 
@@ -443,7 +459,7 @@ public class forgetThemAllScript : MonoBehaviour
 		if (keyStage == 0)
 			keyStage = stageCount;
 
-		Debug.LogFormat("[Forget Them All #{0}] Final value = {1}. Key stage is {2} - {3}.", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
+		Debug.LogFormat(!hasDetonated ? "[Forget Them All #{0}] Value up to this point: {1}" : "[Forget Them All #{0}] Final value = {1}. Key stage is {2} - {3}.", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
 	}
 
 	void CalcWireOrder()
@@ -571,19 +587,27 @@ public class forgetThemAllScript : MonoBehaviour
 		StartCoroutine(HandleSolving());
 	}*/
 	IEnumerator TwitchHandleForcedSolve()
-	{
-        Debug.LogFormat("[Forget Them All #{0}] A force solve has been issued via TP Handler.", moduleId);
+	{// Courtesy of eXish, modified by VFlyer
+		Debug.LogFormat("[Forget Them All #{0}] A force solve has been issued via TP Handler.", moduleId);
         while (!readyToSolve)
         {
             yield return true;
         }
-        int start = wiresCut.Count();
-        int end = cutOrder.Count();
-        for (int i = start; i < end; i++)
-        {
-            wireInt[Array.IndexOf(colors, cutOrder[0])].OnInteract();
-            yield return new WaitForSeconds(0.1f);
-        }
+		int start = wiresCut.Count();
+		int end = cutOrder.Count();
+		List<int> uncutWires = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }.Where(a => !wiresCut.Contains(a)).ToList();
+		if (cutOrder.Any())
+		{
+			for (int i = start; i < end; i++)
+			{
+				wireInt[Array.IndexOf(colors, cutOrder[0])].OnInteract();
+				yield return new WaitForSeconds(0.1f);
+			}
+		}
+		else
+		{
+			wireInt[uncutWires.PickRandom()].OnInteract();
+		}
         /**if (!moduleSolved)
 			Debug.LogFormat("[Forget Them All #{0}] A force solve has been issued viva TP Handler.", moduleId);
 		StartCoroutine(FakeSolveHandling());*/
@@ -598,7 +622,7 @@ public class forgetThemAllScript : MonoBehaviour
 		if (intereptedCommand.RegexMatch(@"^colou?rblind$"))
 		{
 			yield return null;
-/*            if (!colorblindDetected)
+			/* if (!colorblindDetected)
 			{
 				colorblindDetected = true;
 			}
