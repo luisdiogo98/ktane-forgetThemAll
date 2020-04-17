@@ -407,6 +407,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 		foreach (StageInfo si in stages)
 		{
+			if (si.moduleName != null)
 			totalLED = totalLED.Select((x, index) => x + (si.LED[index] ? 1 : 0)).ToArray();
 		}
 
