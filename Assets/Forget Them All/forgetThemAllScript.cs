@@ -397,7 +397,7 @@ public class forgetThemAllScript : MonoBehaviour
 	{
 
 		Debug.LogFormat(hasDetonated ? "[Forget Them All #{0}] ----------------------- Upon Detonation -----------------------" : "[Forget Them All #{0}] --------------------------- Solving ---------------------------", moduleId, currentStage);
-		if (!stages.Any())
+		if (stages == null || !stages.Any())
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Bomb detonated before stages could be generated.", moduleId);
 			return;
