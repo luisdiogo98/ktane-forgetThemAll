@@ -43,30 +43,7 @@
 
             .entry {
                 height: 2.6em;
-                font-size: 0.95em;
-            }
-
-            /* Example CSS; Remove what is not used.*/
-            .bold {
-                font-weight: bold;
-            }
-            .underline {
-                text-decoration: underline;
-            }
-            .italics {
-                font-style: italic;
-            }
-
-            img.center {
-                display: block;
-                margin-left: auto;
-                margin-right: auto;
-            }
-            img.example-image {
-                width: 60%;
-            }
-            body{
-                -webkit-print-color-adjust:exact;
+                font-size: 90%;
             }
         </style>
     </head>
@@ -113,9 +90,7 @@
                         
                         <h4>Interpreting Broken LEDs</h4>
 
-                        <p>For each stage, use the table below and the name of module that caused it to change to the next stage to identify which LEDs were broken that stage. Consider each ON broken LED as if it was OFF, and vice-versa.</p>
-						<p>An LED is broken for a specific stage if the corresponding module's name contains any of the words in the respective row in the table below, either as a whole word or as a part of one. Note that if there are multiple instances of one set of words for one color, the LED will never be unbroken for that module name.</p>
-                       
+                        <p>For each stage, use the table below and the name of module that caused it to change to the next stage to identify which LEDs were broken that stage. Consider each ON broken LED as if it was OFF, and vice-versa.<br>An LED is broken for a specific stage if the corresponding module's name contains any of the words in the respective row in the table below, either as a whole word or as a part of one. Note that if there are multiple instances of one set of words for one color, the LED will never be unbroken for that module name.</p>
                         <table>
                             <tr>
                                 <th class="empty color"></th>
@@ -142,7 +117,7 @@
                                 <td class="entry color" style="background-color: rgb(1, 4, 192);"></td>
                                 <td class="entry colorName">Blue</td>
                                 <td class="entry words">Maze</td>
-                                <td class="entry finalCount">Starting Bomb Time (whole minutes)</td>
+                                <td class="entry finalCount">Starting Bomb Time&dagger; (whole minutes)</td>
                                 <td class="entry letters">C, P, 2</td>
                             </tr>
                             <tr>
@@ -217,6 +192,8 @@
                             </tr>
                         </table>
                     </div>
+					<div><p style="text-align: center;font-size: 80%">&dagger;Starting Bomb Time refers to the time when this module activates, not the time from other bombs.</p>
+					</div>
                    <div class="page-footer relative-footer">Page 2 of 2</div>
                 </div>
             </div>
