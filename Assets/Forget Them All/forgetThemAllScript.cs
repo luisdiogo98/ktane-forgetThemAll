@@ -124,7 +124,7 @@ public class forgetThemAllScript : MonoBehaviour
 	bool canStart = false;
 	void Activate()
 	{
-        startTime = (int)(bomb.GetTime() / 60);
+        
 		if (CheckAutoSolve())
 		{
 			Debug.LogFormat("[Forget Them All #{0}] There are 0 modules not ignored on this bomb. Autosolving...", moduleId);
@@ -154,6 +154,7 @@ public class forgetThemAllScript : MonoBehaviour
 	}
 	void Start()
 	{
+		startTime = (int)(bomb.GetTime() / 60);
 		RandomizeColors();
 	}
 
