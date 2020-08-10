@@ -10,11 +10,14 @@ using System.Text.RegularExpressions;
 public class forgetThemAllScript : MonoBehaviour
 {
 	public KMBombInfo bomb;
-	public KMAudio Audio;
+	public KMAudio MAudio;
+	public KMBombModule modSelf;
+	public KMBossModule bossHandler;
 
 	static string[] ignoredModules;
 
-	public TextMesh stageNo;
+	public TextMesh stageNo, queryStagesCount;
+	public GameObject queryStageObject;
 
 	public HandleWireCut[] wireHandlers;
 
@@ -36,15 +39,15 @@ public class forgetThemAllScript : MonoBehaviour
 	bool readyToSolve = false;
 
 	int stageCount;
-	public int currentStage = 0;
-	public int lastCalcStage = -1;
+	int currentStage = 0;
+	int lastCalcStage = -1;
 	List<int> wiresCut = new List<int>();
 	StageInfo[] stages;
 	int keyStage;
 	List<int> cutOrder = new List<int>();
 
 
-	int delayer = 0;
+	float delayer = 5f;
 	public List<string> solvedModuleNames = new List<string>();
 	public List<string> queuedSolvedNames = new List<string>();
 	int startTime;
@@ -52,13 +55,17 @@ public class forgetThemAllScript : MonoBehaviour
 	bool colorblindDetected = false;
 	public KMColorblindMode colorblindMode;
 	bool hasDetonated = false;
+
+	IEnumerator flashIndicator;
+	int wiresIncorrectlyCut = 0;
+
 	void Awake()
 	{
 		moduleId = moduleIdCounter++;
-		GetComponent<KMBombModule>().OnActivate += Activate;
+		modSelf.OnActivate += Activate;
 
 		if (ignoredModules == null)
-			ignoredModules = GetComponent<KMBossModule>().GetIgnoredModules("Forget Them All", new string[]{
+			ignoredModules = bossHandler.GetIgnoredModules("Forget Them All", new string[]{// Default Ignore List
 				"Forget Them All",
 				"Alchemy",
 				"Forget Everything",
@@ -124,7 +131,6 @@ public class forgetThemAllScript : MonoBehaviour
 	bool canStart = false;
 	void Activate()
 	{
-        
 		if (CheckAutoSolve())
 		{
 			Debug.LogFormat("[Forget Them All #{0}] There are 0 modules not ignored on this bomb. Autosolving...", moduleId);
@@ -143,9 +149,10 @@ public class forgetThemAllScript : MonoBehaviour
 			stageNo.text = curText.Substring(0, curText.Length - 1);
 			yield return new WaitForSeconds(0.1f);
 		}
-        GetComponent<KMBombModule>().HandlePass();
+		modSelf.HandlePass();
         stageNo.text = "";
-        for (int i = 0; i < 13; i++)
+		queryStagesCount.text = "";
+		for (int i = 0; i < 13; i++)
         {
             lightsRenderer[i].material = lightColors[13];
             colorblindTexts[i].text = "";
@@ -157,14 +164,17 @@ public class forgetThemAllScript : MonoBehaviour
 		startTime = (int)(bomb.GetTime() / 60);
 		RandomizeColors();
 	}
-
+	int frameAnim = 30;
+	bool requestForceSolve = false;
 	void Update()
 	{
+		float maxDelay = 3f;
+
 		if (moduleSolved || !canStart)
 			return;
 
-        if (delayer > 0)
-            delayer--;
+        //if (delayer < 5f)
+        //    delayer += Time.deltaTime;
 
 		List<string> curSolvedModules = bomb.GetSolvedModuleNames().Where(a => !ignoredModules.Contains(a)).ToList();
 
@@ -174,8 +184,19 @@ public class forgetThemAllScript : MonoBehaviour
 			curSolvedModules.Remove(queuedSolvedName);
 		if (curSolvedModules.Count > 0)
 			queuedSolvedNames.AddRange(curSolvedModules);
+		if (queuedSolvedNames.Any())
+        {
+			frameAnim = Math.Max(0, frameAnim - 1);
+		}
+		else
+        {
+			frameAnim = Math.Min(30, frameAnim + 1);
+		}
+		if (!moduleSolved)
+			queryStagesCount.text = string.Format("+{0}", Math.Min(queuedSolvedNames.Count, 99).ToString("00"));
+		queryStageObject.transform.localPosition = new Vector3(-.006f - frameAnim * .001f, queryStageObject.transform.localPosition.y, queryStageObject.transform.localPosition.z);
 
-		if (delayer <= 0 && (lastCalcStage == -1 || queuedSolvedNames.Count > 0) && lastCalcStage < currentStage && !readyToSolve)
+		if (delayer >= maxDelay && (lastCalcStage == -1 || queuedSolvedNames.Count > 0) && lastCalcStage < currentStage && !readyToSolve)
 		{
 			lastCalcStage++;
 			if (lastCalcStage - 1 >= 0 && lastCalcStage - 1 < stages.Length)
@@ -185,19 +206,24 @@ public class forgetThemAllScript : MonoBehaviour
 				queuedSolvedNames.RemoveAt(0);
 			}
 			DisplayNextStage();
+			delayer = 0f;
+		}
+		else if ((lastCalcStage == -1 || queuedSolvedNames.Count > 0) && lastCalcStage < currentStage && !readyToSolve)
+		{
+			delayer = requestForceSolve ? maxDelay : Mathf.Min(maxDelay, delayer += Time.deltaTime);
 		}
 	}
 
 	void CutWire(int wire)
 	{
-		GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.WireSnip, wireInt[wire].transform);
+		MAudio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.WireSnip, wireInt[wire].transform);
 
 		wiresCut.Add(wire);
 
 		if (!readyToSolve && !moduleSolved)
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Strike! [{1}] wire cut before module is ready to be solved.", moduleId, GetColorName(colors[wire]));
-			GetComponent<KMBombModule>().HandleStrike();
+			modSelf.HandleStrike();
 			return;
 		}
 		lightsRenderer[wire].material = lightColors[13];
@@ -207,7 +233,11 @@ public class forgetThemAllScript : MonoBehaviour
 		int index = cutOrder.IndexOf(colors[wire]);
 		if (index != -1)
 			cutOrder.RemoveAt(index);
-
+		if (flashIndicator != null)
+		{
+			StopCoroutine(flashIndicator);
+			ShowFinalStage();
+		}
 		if (index == 0)
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Successfully cut {1} wire.", moduleId, GetColorName(colors[wire]));
@@ -220,11 +250,25 @@ public class forgetThemAllScript : MonoBehaviour
 			{
 				Debug.LogFormat("[Forget Them All #{0}] The remaining wires to cut in order are: {2}.", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
 			}
+			wiresIncorrectlyCut = 0;
+			
 		}
 		else if (cutOrder.Any())
 		{
-			Debug.LogFormat("[Forget Them All #{0}] Strike! {1} wire cut. Expecting {2} wire. Remaining wires to cut in order: {3}.", moduleId, GetColorName(colors[wire]), GetColorName(cutOrder[0]), ListToString(cutOrder));
-			GetComponent<KMBombModule>().HandleStrike();
+			Debug.LogFormat("[Forget Them All #{0}] Strike! Incorrectly cut {1} wire when it was expecting {2} wire.", moduleId, GetColorName(colors[wire]), GetColorName(cutOrder[0]), ListToString(cutOrder));
+			modSelf.HandleStrike();
+			wiresIncorrectlyCut++;
+			if (wiresIncorrectlyCut == 1)
+			{
+				flashIndicator = HandleMercyAnim();
+			}
+			else
+			{
+				Debug.LogFormat("[Forget Them All #{0}] You cut two or more wires incorrectly. I'm just going to blink the next wire you are supposed to cut. - VFLyer", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
+				flashIndicator = FlashCorrectWire();
+			}
+			StartCoroutine(flashIndicator);
+			Debug.LogFormat("[Forget Them All #{0}] The remaining wires to cut in order are: {2}.", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
 		}
 		else if (!moduleSolved)
 		{
@@ -232,6 +276,47 @@ public class forgetThemAllScript : MonoBehaviour
 			StartCoroutine(HandleSolving());
 		}
 	}
+	IEnumerator HandleMercyAnim()
+    {
+		for (int i = 0; i < 13; i++)
+		{
+			lightsRenderer[i].material = lightColors[13];
+			colorblindTexts[i].text = "";
+		}
+		yield return new WaitForSeconds(1.5f);
+		for (int x = 0; x < stages.Length; x++)
+        {
+			StageInfo s = stages[x];
+			for (int i = 0; i < s.LED.Count(); i++)
+			{
+				int idx = Array.IndexOf(colors, i);
+				lightsRenderer[idx].material = s.LED[i] ? lightColors[i] : lightColors[13];
+				colorblindTexts[idx].text = colorblindDetected && s.LED[i] ? GetColorAbbrev(colors[idx]) : "";
+				colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
+			}
+			stageNo.text = ((x + 1) % 1000).ToString("000");
+			yield return new WaitForSeconds(0.75f);
+        }
+		ShowFinalStage();
+		yield return null;
+    }
+	IEnumerator FlashCorrectWire()
+    {
+		int lastCutGoalCount = cutOrder.Count;
+		while (cutOrder.Count == lastCutGoalCount)
+        {
+			int i = cutOrder.FirstOrDefault();
+			int idx = Array.IndexOf(colors, i);
+			lightsRenderer[idx].material = lightColors[i];
+			colorblindTexts[idx].text = colorblindDetected ? GetColorAbbrev(colors[idx]) : "";
+			colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
+			yield return new WaitForSeconds(0.5f);
+			lightsRenderer[idx].material = lightColors[13];
+			colorblindTexts[idx].text = "";
+			yield return new WaitForSeconds(0.5f);
+		}
+		yield return null;
+    }
 
 	string GetColorName(int color)
 	{
@@ -303,7 +388,7 @@ public class forgetThemAllScript : MonoBehaviour
 	}
 	void RandomizeColors()
 	{
-		colors = colors.OrderBy(x => rnd.Range(0, 1000)).ToArray();
+		colors.Shuffle();
 
 		for (int i = 0; i < wireHandlers.Count(); i++)
 		{
@@ -329,7 +414,6 @@ public class forgetThemAllScript : MonoBehaviour
 	void DisplayNextStage()
 	{
 		currentStage++;
-		delayer = 300;
 		if (currentStage > stageCount)
 		{
 			if (readyToSolve)
@@ -461,7 +545,7 @@ public class forgetThemAllScript : MonoBehaviour
 		if (keyStage == 0)
 			keyStage = stageCount;
 
-		Debug.LogFormat(hasDetonated ? "[Forget Them All #{0}] Value up to this point: {1}" : "[Forget Them All #{0}] Final value = {1}. Key stage is {2} - {3}.", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
+		Debug.LogFormat(hasDetonated ? "[Forget Them All #{0}] Value up to this point: {1}" : "[Forget Them All #{0}] Final value: {1}. Key stage: {2} - {3}.", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
 	}
 
 	void CalcWireOrder()
@@ -485,7 +569,7 @@ public class forgetThemAllScript : MonoBehaviour
 			}
 		}
 		if (cutOrder.Any())
-			Debug.LogFormat("[Forget Them All #{0}] Wire cut order is {1}.", moduleId, ListToString(cutOrder));
+			Debug.LogFormat("[Forget Them All #{0}] Wire cut order: {1}.", moduleId, ListToString(cutOrder));
 		else
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Remaining uncut wires have no characters in relation to the module name! Cut any wire to solve the module.", moduleId);
@@ -591,7 +675,8 @@ public class forgetThemAllScript : MonoBehaviour
 	IEnumerator TwitchHandleForcedSolve()
 	{// Courtesy of eXish, modified by VFlyer
 		Debug.LogFormat("[Forget Them All #{0}] A force solve has been issued via TP Handler.", moduleId);
-        while (!readyToSolve)
+		requestForceSolve = true;
+		while (!readyToSolve)
         {
             yield return true;
         }
