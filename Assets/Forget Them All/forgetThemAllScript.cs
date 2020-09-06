@@ -54,7 +54,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	bool colorblindDetected = false;
 	public KMColorblindMode colorblindMode;
-	bool hasDetonated = false;
+	bool hasDetonated = false, hasStruck = false;
 
 	IEnumerator flashIndicator;
 	int wiresIncorrectlyCut = 0;
@@ -224,6 +224,7 @@ public class forgetThemAllScript : MonoBehaviour
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Strike! [{1}] wire cut before module is ready to be solved.", moduleId, GetColorName(colors[wire]));
 			modSelf.HandleStrike();
+			hasStruck = true;
 			return;
 		}
 		lightsRenderer[wire].material = lightColors[13];
@@ -257,6 +258,7 @@ public class forgetThemAllScript : MonoBehaviour
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Strike! Incorrectly cut {1} wire when it was expecting {2} wire.", moduleId, GetColorName(colors[wire]), GetColorName(cutOrder[0]), ListToString(cutOrder));
 			modSelf.HandleStrike();
+			hasStruck = true;
 			wiresIncorrectlyCut++;
 			if (wiresIncorrectlyCut == 1)
 			{
@@ -264,7 +266,7 @@ public class forgetThemAllScript : MonoBehaviour
 			}
 			else
 			{
-				Debug.LogFormat("[Forget Them All #{0}] You cut two or more wires incorrectly. I'm just going to blink the next wire you are supposed to cut. - VFLyer", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
+				Debug.LogFormat("[Forget Them All #{0}] You cut two or more wires incorrectly. The next wire that must be cut will now blink.", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
 				flashIndicator = FlashCorrectWire();
 			}
 			StartCoroutine(flashIndicator);
@@ -579,7 +581,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	int GetCharColor(char c)
 	{
-		char conv = Char.ToUpper(c);
+		char conv = char.ToUpper(c);
 		switch (conv)
 		{
 			case 'A':
@@ -690,19 +692,23 @@ public class forgetThemAllScript : MonoBehaviour
 				wireInt[Array.IndexOf(colors, cutOrder[0])].OnInteract();
 				yield return new WaitForSeconds(0.1f);
 			}
+			yield return true;
 		}
 		else
 		{
 			wireInt[uncutWires.PickRandom()].OnInteract();
+			yield return true;
 		}
-        /**if (!moduleSolved)
+		/**if (!moduleSolved)
 			Debug.LogFormat("[Forget Them All #{0}] A force solve has been issued viva TP Handler.", moduleId);
 		StartCoroutine(FakeSolveHandling());*/
+		
     }
 
     #pragma warning disable IDE0051 // Remove unused private members
 	private readonly string TwitchHelpMessage = "Cut the following wires with \"!{0} cut 1 2 3 ...\" Wires are numbered 1–13 from left to right on the module. To toggle colorblind mode: \"!{0} colorblind\"";
-    #pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0051 // Remove unused private members
+	private readonly string[] positionalValues = { "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th", "13th", };
 	IEnumerator ProcessTwitchCommand(string command)
 	{
 		string intereptedCommand = command.ToLower();
@@ -728,11 +734,12 @@ public class forgetThemAllScript : MonoBehaviour
 			int value;
 			List<KMSelectable> wiresToCut = new List<KMSelectable>();
 			string[] intereptedDigits = intereptedCommand.Substring(4).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+			
 			foreach (string number in intereptedDigits)
 			{
 				if (!int.TryParse(number, out value) || value < 1 || value > 13)
 				{
-					yield return string.Format("sendtochaterror The following wire in position {0} does not exist! Wires are numbered 1 – 13 from left to right.", value);
+					yield return string.Format("sendtochaterror The following wire in position \"{0}\" does not exist! Wires are numbered 1 – 13 from left to right.", number);
 					yield break;
 				}
 				else if (wiresToCut.Contains(wireInt[value - 1]))
@@ -747,9 +754,19 @@ public class forgetThemAllScript : MonoBehaviour
 				}
 				wiresToCut.Add(wireInt[value - 1]);
 			}
-
+			hasStruck = false;
 			yield return null;
-			yield return wiresToCut;
+			if (wiresToCut.Count > 0)
+			{
+				for (int x = 0; x < wiresToCut.Count && !hasStruck; x++)
+				{
+					int idx = wireHandlers.Select(a => a.wireSelectable).ToList().IndexOf(wiresToCut[x]);
+					if (!readyToSolve || (cutOrder.Any() && cutOrder.First() != idx))
+						yield return string.Format("strikemessage incorrectly cutting the {0} wire!", idx < 0 ? "?th" : positionalValues[idx]);
+					wiresToCut[x].OnInteract();
+					yield return new WaitForSeconds(0.1f);
+				}
+			}
 			yield return "solve";
 		}
 		else
