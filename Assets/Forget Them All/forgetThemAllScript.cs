@@ -54,35 +54,17 @@ public class forgetThemAllScript : MonoBehaviour
 
 	bool colorblindDetected = false;
 	public KMColorblindMode colorblindMode;
-	bool hasDetonated = false, hasStruck = false;
+	bool hasDetonated = false, hasStruck = false, isHardcoreBossModule;
 
 	IEnumerator flashIndicator;
 	int wiresIncorrectlyCut = 0;
+
+	private ForgetThemAllSettings ftaSettings;
 
 	void Awake()
 	{
 		moduleId = moduleIdCounter++;
 		modSelf.OnActivate += Activate;
-
-		if (ignoredModules == null)
-			ignoredModules = bossHandler.GetIgnoredModules("Forget Them All", new string[]{// Default Ignore List
-				"Forget Them All",
-				"Alchemy",
-				"Forget Everything",
-				"Forget Infinity",
-				"Forget Me Not",
-				"Forget This",
-				"Purgatory",
-				"Souvenir",
-				"Cookie Jars",
-				"Divided Squares",
-				"Hogwarts",
-				"The Swan",
-				"Turn the Keys",
-				"The Time Keeper",
-				"Timing is Everything",
-				"Turn the Key"
-			});
 
 		for (int x = 0; x < wireInt.Length; x++)
 		{
@@ -120,13 +102,54 @@ public class forgetThemAllScript : MonoBehaviour
 		catch (Exception error)
 		{
 			colorblindDetected = false;
-			Debug.LogErrorFormat("[Forget Them All #{0}] An exception occured on Forget Them All involving Colorblind Mode. This is not a severe issue. It might just be someone forgetting to assign something again.", moduleId);
+			Debug.LogErrorFormat("<Forget Them All #{0}> An exception occured on Forget Them All involving Colorblind Mode. This is not a severe issue. It might just be someone forgetting to assign something again.", moduleId);
 			Debug.LogException(error);
 		}
         for (int i = 0; i < 13; i++)
 		{
 			colorblindTexts[i].text = "";
 		}
+	}
+	void Start()
+	{
+		try
+		{
+			ModConfig<ForgetThemAllSettings> localSettings = new ModConfig<ForgetThemAllSettings>("ForgetThemAllSettings");
+			ftaSettings = localSettings.Settings;
+
+			localSettings.Settings = ftaSettings;
+
+			isHardcoreBossModule = ftaSettings.hardcoreBossModule;
+		}
+        catch (Exception error)
+        {
+			Debug.LogErrorFormat("[Forget Them All #{0}] An exception occured on Forget Them All involving its settings. Default settings will be used instead.", moduleId);
+			Debug.LogException(error);
+			isHardcoreBossModule = false;
+		}
+
+		if (ignoredModules == null)
+			ignoredModules = bossHandler.GetIgnoredModules("Forget Them All", new string[]{// Default Ignore List
+				"Forget Them All",
+				"Alchemy",
+				"Forget Everything",
+				"Forget Infinity",
+				"Forget Me Not",
+				"Forget This",
+				"Purgatory",
+				"Souvenir",
+				"Cookie Jars",
+				"Divided Squares",
+				"Hogwarts",
+				"The Swan",
+				"Turn the Keys",
+				"The Time Keeper",
+				"Timing is Everything",
+				"Turn the Key"
+			});
+		startTime = (int)(bomb.GetTime() / 60);
+		RandomizeColors();
+		Debug.LogFormat("[Forget Them All #{0}] Stage recovery is {1} for this module.", moduleId, isHardcoreBossModule ? "disabled" : "enabled");
 	}
 	bool canStart = false;
 	void Activate()
@@ -158,11 +181,6 @@ public class forgetThemAllScript : MonoBehaviour
             colorblindTexts[i].text = "";
         }
 		yield return null;
-	}
-	void Start()
-	{
-		startTime = (int)(bomb.GetTime() / 60);
-		RandomizeColors();
 	}
 	int frameAnim = 30;
 	bool requestForceSolve = false;
@@ -259,17 +277,20 @@ public class forgetThemAllScript : MonoBehaviour
 			Debug.LogFormat("[Forget Them All #{0}] Strike! Incorrectly cut {1} wire when it was expecting {2} wire.", moduleId, GetColorName(colors[wire]), GetColorName(cutOrder[0]), ListToString(cutOrder));
 			modSelf.HandleStrike();
 			hasStruck = true;
-			wiresIncorrectlyCut++;
-			if (wiresIncorrectlyCut == 1)
+			if (!isHardcoreBossModule)
 			{
-				flashIndicator = HandleMercyAnim();
+				wiresIncorrectlyCut = 1;
+				if (wiresIncorrectlyCut == 1)
+				{
+					flashIndicator = HandleMercyAnim();
+				}
+				else
+				{
+					Debug.LogFormat("[Forget Them All #{0}] You cut two or more wires incorrectly. The next wire that must be cut will now blink.", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
+					flashIndicator = FlashCorrectWire();
+				}
+				StartCoroutine(flashIndicator);
 			}
-			else
-			{
-				Debug.LogFormat("[Forget Them All #{0}] You cut two or more wires incorrectly. The next wire that must be cut will now blink.", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
-				flashIndicator = FlashCorrectWire();
-			}
-			StartCoroutine(flashIndicator);
 			Debug.LogFormat("[Forget Them All #{0}] The remaining wires to cut in order are: {2}.", moduleId, GetColorName(colors[wire]), ListToString(cutOrder));
 		}
 		else if (!moduleSolved)
@@ -285,19 +306,19 @@ public class forgetThemAllScript : MonoBehaviour
 			lightsRenderer[i].material = lightColors[13];
 			colorblindTexts[i].text = "";
 		}
-		yield return new WaitForSeconds(1.5f);
+		yield return new WaitForSeconds(3f);
 		for (int x = 0; x < stages.Length; x++)
         {
 			StageInfo s = stages[x];
 			for (int i = 0; i < s.LED.Count(); i++)
 			{
 				int idx = Array.IndexOf(colors, i);
-				lightsRenderer[idx].material = s.LED[i] ? lightColors[i] : lightColors[13];
-				colorblindTexts[idx].text = colorblindDetected && s.LED[i] ? GetColorAbbrev(colors[idx]) : "";
+				lightsRenderer[idx].material = s.LED[i] ^ s.LEDToggledByKeyword[i] ? lightColors[i] : lightColors[13];
+				colorblindTexts[idx].text = colorblindDetected && s.LED[i] ^ s.LEDToggledByKeyword[i] ? GetColorAbbrev(colors[idx]) : "";
 				colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
 			}
 			stageNo.text = ((x + 1) % 1000).ToString("000");
-			yield return new WaitForSeconds(0.75f);
+			yield return new WaitForSeconds(2f);
         }
 		ShowFinalStage();
 		yield return null;
@@ -651,6 +672,12 @@ public class forgetThemAllScript : MonoBehaviour
 
 		return res + "]";
 	}
+
+	public class ForgetThemAllSettings
+    {
+		public bool hardcoreBossModule = true;
+    }
+
 	/** Old fake solve handler
      * IEnumerator FakeSolveHandling()
 	{
@@ -684,7 +711,7 @@ public class forgetThemAllScript : MonoBehaviour
         }
 		int start = wiresCut.Count();
 		int end = cutOrder.Count();
-		List<int> uncutWires = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }.Where(a => !wiresCut.Contains(a)).ToList();
+		List<int> uncutWires = Enumerable.Range(0, 13).Where(a => !wiresCut.Contains(a)).ToList();
 		if (cutOrder.Any())
 		{
 			for (int i = start; i < end; i++)
@@ -756,13 +783,13 @@ public class forgetThemAllScript : MonoBehaviour
 			}
 			hasStruck = false;
 			yield return null;
-			if (wiresToCut.Count > 0)
+			if (wiresToCut.Any())
 			{
 				for (int x = 0; x < wiresToCut.Count && !hasStruck; x++)
 				{
 					int idx = wireHandlers.Select(a => a.wireSelectable).ToList().IndexOf(wiresToCut[x]);
-					if (!readyToSolve || (cutOrder.Any() && cutOrder.First() != idx))
-						yield return string.Format("strikemessage incorrectly cutting the {0} wire!", idx < 0 ? "?th" : positionalValues[idx]);
+					if ((!readyToSolve || (cutOrder.Any() && cutOrder.First() != idx)) && wiresToCut.Count > 1)
+						yield return string.Format("strikemessage incorrectly cutting the {0} wire after {1} previous cuts!", idx < 0 ? "?th" : positionalValues[idx], x == 0 ? "no" : x.ToString());
 					wiresToCut[x].OnInteract();
 					yield return new WaitForSeconds(0.1f);
 				}
