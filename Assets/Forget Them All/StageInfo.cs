@@ -208,11 +208,11 @@ public class StageInfo {
 			LED[9] = !LED[9];
 			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"light\". Toggling White LED.", moduleId, stageNo);
 		}
-		else if(moduleName.IndexOf("grid",  StringComparison.InvariantCultureIgnoreCase) != -1)
+		else if(moduleName.IndexOf("led",  StringComparison.InvariantCultureIgnoreCase) != -1)
 		{
 			LEDToggledByKeyword[9] = true;
 			LED[9] = !LED[9];
-			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"grid\". Toggling White LED.", moduleId, stageNo);
+			Debug.LogFormat("[Forget Them All #{0}] Stage {1} corresponding module contains \"led\". Toggling White LED.", moduleId, stageNo);
 		}
 		// Purple LED Toggle
 		if(moduleName.IndexOf("square",  StringComparison.InvariantCultureIgnoreCase) != -1)
