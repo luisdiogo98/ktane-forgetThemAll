@@ -54,7 +54,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	bool colorblindDetected = false;
 	public KMColorblindMode colorblindMode;
-	bool hasDetonated = false, hasStruck = false, isHardcoreBossModule;
+	bool hasDetonated = false, hasStruck = false, isHardcoreBossModule, requestMercyAnim;
 
 	IEnumerator flashIndicator;
 	int wiresIncorrectlyCut = 0;
@@ -202,7 +202,7 @@ public class forgetThemAllScript : MonoBehaviour
 			curSolvedModules.Remove(queuedSolvedName);
 		if (curSolvedModules.Count > 0)
 			queuedSolvedNames.AddRange(curSolvedModules);
-		if (queuedSolvedNames.Any())
+		if (queuedSolvedNames.Any() || requestMercyAnim)
         {
 			frameAnim = Math.Max(0, frameAnim - 1);
 		}
@@ -210,7 +210,7 @@ public class forgetThemAllScript : MonoBehaviour
         {
 			frameAnim = Math.Min(30, frameAnim + 1);
 		}
-		if (!moduleSolved)
+		if (!moduleSolved && !readyToSolve)
 			queryStagesCount.text = string.Format("+{0}", Math.Min(queuedSolvedNames.Count, 99).ToString("00"));
 		queryStageObject.transform.localPosition = new Vector3(-.006f - frameAnim * .001f, queryStageObject.transform.localPosition.y, queryStageObject.transform.localPosition.z);
 
@@ -252,6 +252,8 @@ public class forgetThemAllScript : MonoBehaviour
 		int index = cutOrder.IndexOf(colors[wire]);
 		if (index != -1)
 			cutOrder.RemoveAt(index);
+		requestMercyAnim = false;
+		queryStagesCount.text = "+00";
 		if (flashIndicator != null)
 		{
 			StopCoroutine(flashIndicator);
@@ -301,12 +303,15 @@ public class forgetThemAllScript : MonoBehaviour
 	}
 	IEnumerator HandleMercyAnim()
     {
+		requestMercyAnim = true;
 		for (int i = 0; i < 13; i++)
 		{
 			lightsRenderer[i].material = lightColors[13];
 			colorblindTexts[i].text = "";
 		}
+		queryStagesCount.text = "+00";
 		yield return new WaitForSeconds(3f);
+		
 		for (int x = 0; x < stages.Length; x++)
         {
 			StageInfo s = stages[x];
@@ -318,8 +323,12 @@ public class forgetThemAllScript : MonoBehaviour
 				colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
 			}
 			stageNo.text = ((x + 1) % 1000).ToString("000");
+			var solveActivatedModule = s.moduleName.Where(a => char.IsDigit(a) || char.IsLetter(a)).Join("").ToUpper();
+			queryStagesCount.text = solveActivatedModule.Substring(0, Mathf.Min(3, solveActivatedModule.Length));
 			yield return new WaitForSeconds(2f);
         }
+		requestMercyAnim = false;
+		queryStagesCount.text = "+00";
 		ShowFinalStage();
 		yield return null;
     }
@@ -452,7 +461,7 @@ public class forgetThemAllScript : MonoBehaviour
 				StartCoroutine(HandleSolving());
 				return;
 			}
-
+			queryStagesCount.text = "+00";
 			CalcFinalSolution();
 			CalcWireOrder();
 			return;
@@ -503,8 +512,24 @@ public class forgetThemAllScript : MonoBehaviour
 
 	void CalcFinalSolution()
 	{
-
-		Debug.LogFormat(hasDetonated ? "[Forget Them All #{0}] ----------------------- Upon Detonation -----------------------" : "[Forget Them All #{0}] --------------------------- Solving ---------------------------", moduleId, currentStage);
+		var requireStageToSolve = true;
+		if (!readyToSolve && solvedModuleNames.Count + 1 >= stages.Length)
+		{
+			Debug.LogFormat("[Forget Them All #{0}] There is exactly 1 unsolved non-ignored module left upon detonation. Calculating as if the module is ready to solve.", moduleId);
+			List<string> remainingUnsolved = bomb.GetSolvableModuleNames().Where(a => !ignoredModules.Contains(a)).ToList();
+			foreach (string aModName in solvedModuleNames)
+				remainingUnsolved.Remove(aModName);
+			foreach (string aModName in queuedSolvedNames)
+				remainingUnsolved.Remove(aModName);
+            if (remainingUnsolved.Any())
+				stages[lastCalcStage].SetModuleName(remainingUnsolved.First());
+			else if (queuedSolvedNames.Any())
+				stages[lastCalcStage].SetModuleName(queuedSolvedNames.First());
+		}
+		else
+			requireStageToSolve = false;
+		Debug.LogFormat(hasDetonated ? "[Forget Them All #{0}] ----------------------- Upon Detonation -----------------------"
+			: "[Forget Them All #{0}] --------------------------- Solving ---------------------------", moduleId, currentStage);
 		if (stages == null || !stages.Any())
 		{
 			Debug.LogFormat("[Forget Them All #{0}] Bomb detonated before stages could be generated.", moduleId);
@@ -512,6 +537,7 @@ public class forgetThemAllScript : MonoBehaviour
 		}
 
 		int[] totalLED = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		
 
 		foreach (StageInfo si in stages)
 		{
@@ -568,7 +594,7 @@ public class forgetThemAllScript : MonoBehaviour
 		if (keyStage == 0)
 			keyStage = stageCount;
 
-		Debug.LogFormat(hasDetonated ? "[Forget Them All #{0}] Value up to this point: {1}" : "[Forget Them All #{0}] Final value: {1}. Key stage: {2} - {3}.", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
+		Debug.LogFormat(!requireStageToSolve ? "[Forget Them All #{0}] Value up to this point: {1}" : "[Forget Them All #{0}] Final value: {1}. Key stage: {2} - {3}.", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
 	}
 
 	void CalcWireOrder()
@@ -675,7 +701,7 @@ public class forgetThemAllScript : MonoBehaviour
 
 	public class ForgetThemAllSettings
     {
-		public bool hardcoreBossModule = true;
+		public bool hardcoreBossModule = false;
     }
 
 	/** Old fake solve handler
