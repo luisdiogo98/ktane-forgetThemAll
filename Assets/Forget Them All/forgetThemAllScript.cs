@@ -323,8 +323,8 @@ public class forgetThemAllScript : MonoBehaviour
 				colorblindTexts[idx].color = "WLYI".Contains(colorblindTexts[idx].text) ? Color.black : Color.white;
 			}
 			stageNo.text = ((x + 1) % 1000).ToString("000");
-			var solveActivatedModule = s.moduleName.Where(a => "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(a)).Join("").ToUpper();
-			queryStagesCount.text = solveActivatedModule.Substring(0, Mathf.Min(3, solveActivatedModule.Length));
+			var solveActivatedModule = s.moduleName.ToUpper().Where(a => "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(a)).Join("");
+			queryStagesCount.text = string.IsNullOrEmpty(solveActivatedModule) ? "" : solveActivatedModule.Substring(0, Mathf.Min(3, solveActivatedModule.Length));
 			yield return new WaitForSeconds(2f);
         }
 		requestMercyAnim = false;
