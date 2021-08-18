@@ -513,7 +513,7 @@ public class forgetThemAllScript : MonoBehaviour
 	void CalcFinalSolution()
 	{
 		var requireStageToSolve = true;
-		if (!readyToSolve && solvedModuleNames.Count + 1 >= stages.Length)
+		if (!readyToSolve && stages != null && solvedModuleNames.Count + 1 >= stages.Length)
 		{
 			Debug.LogFormat("[Forget Them All #{0}] There is exactly 1 unsolved non-ignored module left upon detonation. Calculating as if the module is ready to solve.", moduleId);
 			List<string> remainingUnsolved = bomb.GetSolvableModuleNames().Where(a => !ignoredModules.Contains(a)).ToList();
@@ -535,7 +535,6 @@ public class forgetThemAllScript : MonoBehaviour
 			Debug.LogFormat("[Forget Them All #{0}] Bomb detonated before stages could be generated.", moduleId);
 			return;
 		}
-
 		int[] totalLED = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 		
 

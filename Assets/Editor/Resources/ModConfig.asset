@@ -24,6 +24,6 @@ MonoBehaviour:
     HTML: [url=https://ktane.timwi.de/HTML/Forget%20Them%20All.html\r]https://ktane.timwi.de/HTML/Forget%20Them%20All.html\r[/url]\nManual
     PDF: [url=https://ktane.timwi.de/PDF/Forget%20Them%20All.pdf\r]https://ktane.timwi.de/PDF/Forget%20Them%20All.pdf\r[/url]\n\r\nThe
     KTaNE Discord is linked here: https://discord.gg/Fv7YEDj"
-  version: 1.10_01
+  version: 1.10_02
   outputFolder: build
   previewImage: {fileID: 2800000, guid: fa0a0975b0fa5124bb96bec22236b27a, type: 3}
