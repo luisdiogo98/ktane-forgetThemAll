@@ -593,7 +593,7 @@ public class forgetThemAllScript : MonoBehaviour
 		if (keyStage == 0)
 			keyStage = stageCount;
 
-		Debug.LogFormat(!requireStageToSolve ? "[Forget Them All #{0}] Value up to this point: {1}" : "[Forget Them All #{0}] Final value: {1}. Key stage: {2} - {3}.", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
+		Debug.LogFormat(requireStageToSolve || readyToSolve ? "[Forget Them All #{0}] Final value: {1}. Key stage: {2} - {3}." : "[Forget Them All #{0}] Value up to this point: {1}", moduleId, value, keyStage, stages[keyStage - 1].moduleName);
 	}
 
 	void CalcWireOrder()
